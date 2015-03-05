@@ -3,3 +3,6 @@
 
 #Packages
 .jar
+
+#Datasets
+.csv
