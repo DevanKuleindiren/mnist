@@ -38,25 +38,10 @@ public class GamePanel extends JPanel implements MouseListener, MouseMotionListe
     }
 
     protected void paintComponent(Graphics g) {
-
         if (image == null) return;
         g.setColor(Color.WHITE);
         g.fillRect(0, 0, width, height);
         image.draw(g, width, height);
-        if (zoom > 4) {
-            g.setColor(Color.LIGHT_GRAY);
-
-            double colScale = (double)width/(double)image.getWidth();
-            double rowScale = (double)height/(double)image.getHeight();
-
-//            for (int i = 0; i < image.getWidth(); i++) {
-//                g.drawLine((int) colScale * i, 0, (int) colScale * i, height);
-//            }
-//
-//            for (int j = 0; j < image.getHeight(); j++) {
-//                g.drawLine(0, (int) rowScale * j, width, (int) rowScale * j);
-//            }
-        }
     }
 
     public void display(Image w) {
