@@ -118,7 +118,6 @@ public class DeepNet {
 
 			if ((i-1) % 100 == 0) {
 				System.out.println("% Error: " + (error / (inputVectors.length * outputNeuronNo)) * 100);
-				controlPanel.updateProgress(i);
 			}
 			
 			//COMPUTE ERROR IN THE HIDDEN NEURONS

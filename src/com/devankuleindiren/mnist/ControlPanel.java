@@ -1,6 +1,8 @@
 package com.devankuleindiren.mnist;
 
 import javax.swing.*;
+import javax.swing.border.Border;
+import javax.swing.border.EtchedBorder;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
@@ -15,7 +17,7 @@ public class ControlPanel extends JPanel {
     private JButton classify;
     private JButton save;
     private JButton load;
-    private JProgressBar progressBar;
+    private JLabel progress;
     private JLabel label;
     private JLabel result;
 
@@ -28,7 +30,7 @@ public class ControlPanel extends JPanel {
     private int hiddenNeuronNo = 15;
     private int outputNeuronNo = 10;
 
-    public static ControlPanel getInstance () {
+    public static ControlPanel getInstance() {
         if (instance == null) instance = new ControlPanel();
 
         return instance;
@@ -37,43 +39,115 @@ public class ControlPanel extends JPanel {
     private ControlPanel() {
         super();
 
+        JPanel loadImage = new JPanel();
+        addBorder(loadImage, "Load Image");
+
+        JPanel training = new JPanel();
+        addBorder(training, "Training");
+
+        JPanel saveLoad = new JPanel();
+        addBorder(saveLoad, "File");
+
         nextImage = new JButton("Next image");
         train = new JButton("Train");
         classify = new JButton("Classify");
         save = new JButton("Save weights");
         load = new JButton("Load weights");
-        progressBar = new JProgressBar(0, trainIter);
-        progressBar.setValue(0);
-        progressBar.setStringPainted(true);
+        progress = new JLabel("");
         label = new JLabel("-");
         result = new JLabel("-");
 
-        GroupLayout layout = new GroupLayout(this);
-        this.setLayout(layout);
 
+        GroupLayout layout = new GroupLayout(loadImage);
+        loadImage.setLayout(layout);
         layout.setHorizontalGroup(
                 layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING)
                                 .addComponent(nextImage)
-                                .addComponent(label)
-                                .addComponent(train)
-                                .addComponent(progressBar)
-                                .addComponent(classify)
-                                .addComponent(result)
-                                .addComponent(save)
-                                .addComponent(load))
+                                .addComponent(label))
         );
         layout.setVerticalGroup(
                 layout.createSequentialGroup()
                         .addComponent(nextImage)
                         .addComponent(label)
+        );
+
+        GroupLayout layout2 = new GroupLayout(training);
+        training.setLayout(layout2);
+        layout2.setHorizontalGroup(
+                layout2.createSequentialGroup()
+                        .addGroup(layout2.createParallelGroup(GroupLayout.Alignment.LEADING)
+                                .addComponent(train)
+                                .addComponent(progress)
+                                .addComponent(classify)
+                                .addComponent(result)
+                        )
+        );
+        layout2.setVerticalGroup(
+                layout2.createSequentialGroup()
                         .addComponent(train)
-                        .addComponent(progressBar)
+                        .addComponent(progress)
                         .addComponent(classify)
                         .addComponent(result)
+        );
+
+        GroupLayout layout3 = new GroupLayout(saveLoad);
+        saveLoad.setLayout(layout3);
+        layout3.setHorizontalGroup(
+                layout3.createSequentialGroup()
+                        .addGroup(layout3.createParallelGroup(GroupLayout.Alignment.LEADING)
+                                        .addComponent(save)
+                                        .addComponent(load)
+                        )
+        );
+        layout3.setVerticalGroup(
+                layout3.createSequentialGroup()
                         .addComponent(save)
                         .addComponent(load)
         );
+
+
+        GroupLayout overall = new GroupLayout(this);
+        this.setLayout(overall);
+
+        overall.setHorizontalGroup(
+                overall.createSequentialGroup()
+                        .addGroup(overall.createParallelGroup(GroupLayout.Alignment.LEADING)
+                                .addComponent(loadImage)
+                                .addComponent(training)
+                                .addComponent(saveLoad))
+        );
+        overall.setVerticalGroup(
+                overall.createSequentialGroup()
+                        .addComponent(loadImage)
+                        .addComponent(training)
+                        .addComponent(saveLoad)
+        );
+
+
+//        layout.setHorizontalGroup(
+//                layout.createSequentialGroup()
+//                        .addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+//                                .addComponent(nextImage)
+//                                .addComponent(label)
+//                                .addComponent(train)
+//                                .addComponent(progress)
+//                                .addComponent(classify)
+//                                .addComponent(result)
+//                                .addComponent(save)
+//                                .addComponent(load))
+//        );
+//        layout.setVerticalGroup(
+//                layout.createSequentialGroup()
+//                        .addComponent(nextImage)
+//                        .addComponent(label)
+//                        .addComponent(train)
+//                        .addComponent(progress)
+//                        .addComponent(classify)
+//                        .addComponent(result)
+//                        .addComponent(save)
+//                        .addComponent(load)
+//        );
 
         nextImage.addActionListener(new ActionListener() {
             @Override
@@ -94,6 +168,8 @@ public class ControlPanel extends JPanel {
         train.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                progress.setText("Training...");
+
                 // LOAD DATA FROM DATA LOADER
                 System.out.println("LOADING INPUT BATCH...");
                 final Batch batch = DataLoader.getInputBatch(batchSize);
@@ -106,6 +182,8 @@ public class ControlPanel extends JPanel {
                 System.out.println();
                 System.out.println();
                 System.out.println("DEEPNET TRAINED. ERROR: " + Double.toString((error / (batchSize * 10)) * 100) + " %");
+
+                progress.setText("Net trained.");
             }
         });
 
@@ -217,15 +295,16 @@ public class ControlPanel extends JPanel {
         });
     }
 
-    public void updateLabel (String label) {
+    public void updateLabel(String label) {
         if (this.label != null) {
             this.label.setText("Digit: " + label);
         }
     }
 
-    public void updateProgress (int progress) {
-        progressBar.setValue(progress);
-        progressBar.repaint();
+    private void addBorder(JComponent component, String title) {
+        Border etch = BorderFactory.createEtchedBorder(EtchedBorder.LOWERED);
+        Border tb = BorderFactory.createTitledBorder(etch,title);
+        component.setBorder(tb);
     }
 }
 

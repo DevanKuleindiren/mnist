@@ -34,17 +34,23 @@ public class Editor extends JFrame {
 
     private JComponent createGamePanel() {
         JPanel holder = new JPanel();
-        addBorder(holder,"Image");
+        //holder.setLayout(new BoxLayout(holder, BoxLayout.X_AXIS));
+        addBorder(holder, "Image");
+
         final GamePanel result = GamePanel.getInstance();
-        holder.add(result);
         JButton reset = new JButton("Reset");
+        reset.setAlignmentX(JComponent.CENTER_ALIGNMENT);
+        reset.setAlignmentY(JComponent.CENTER_ALIGNMENT);
         reset.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 result.resetImage();
             }
         });
+
+        holder.add(result);
         holder.add(reset);
+
         this.gamePanel = result;
         return new JScrollPane(holder);
     }

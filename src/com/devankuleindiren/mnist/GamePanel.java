@@ -19,6 +19,8 @@ public class GamePanel extends JPanel implements MouseListener, MouseMotionListe
     private GamePanel () {
         addMouseListener(this);
         addMouseMotionListener(this);
+        this.setAlignmentX(JComponent.CENTER_ALIGNMENT);
+        this.setAlignmentY(JComponent.CENTER_ALIGNMENT);
 
     }
 
