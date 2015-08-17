@@ -159,8 +159,8 @@ public class ControlPanel extends JPanel {
                 } catch (IOException exception) {
                     System.out.println(exception.getMessage());
                 }
-                GamePanel gamePanel = GamePanel.getInstance();
-                gamePanel.display(image);
+                DrawingPanel drawingPanel = DrawingPanel.getInstance();
+                drawingPanel.display(image);
                 updateLabel(image.getLabel());
             }
         });
@@ -190,8 +190,8 @@ public class ControlPanel extends JPanel {
         classify.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                GamePanel gamePanel = GamePanel.getInstance();
-                Image currentImage = gamePanel.getImage();
+                DrawingPanel drawingPanel = DrawingPanel.getInstance();
+                Image currentImage = drawingPanel.getImage();
                 double[][] input = currentImage.pixelsToVector();
                 double[][] output;
 

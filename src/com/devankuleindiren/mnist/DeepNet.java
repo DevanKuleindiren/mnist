@@ -160,6 +160,7 @@ public class DeepNet {
 
 		//INPUT NODES TO HIDDEN LAYER
 		hiddenActs = useNetP1(inputVectors, beta);
+
 		//HIDDEN LAYER TO OUTPUT LAYER
 		outputActs = useNetP2(hiddenActs, beta);
 		
