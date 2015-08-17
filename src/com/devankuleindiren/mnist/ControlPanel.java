@@ -20,6 +20,7 @@ public class ControlPanel extends JPanel {
     private JButton save;
     private JButton load;
     private JButton erase;
+    private JButton generate;
 
     private int trainIter = 1000;
     private int batchSize = 1000;
@@ -50,8 +51,11 @@ public class ControlPanel extends JPanel {
         JPanel saveLoad = new JPanel();
         addBorder(saveLoad, "File");
 
-        final JPanel drawing = new JPanel();
+        JPanel drawing = new JPanel();
         addBorder(drawing, "Drawing");
+
+        JPanel artificialData = new JPanel();
+        addBorder(artificialData, "Artificial Data");
 
         nextImage = new JButton("Next image");
         train = new JButton("Train");
@@ -62,7 +66,7 @@ public class ControlPanel extends JPanel {
         save = new JButton("Save weights");
         load = new JButton("Load weights");
         erase = new JButton("Erase");
-
+        generate = new JButton("Generate");
 
         GroupLayout layout = new GroupLayout(loadImage);
         loadImage.setLayout(layout);
@@ -125,6 +129,19 @@ public class ControlPanel extends JPanel {
                         .addComponent(erase)
         );
 
+        GroupLayout layout5 = new GroupLayout(artificialData);
+        artificialData.setLayout(layout5);
+        layout5.setHorizontalGroup(
+                layout5.createSequentialGroup()
+                        .addGroup(layout5.createParallelGroup(GroupLayout.Alignment.LEADING)
+                                        .addComponent(generate)
+                        )
+        );
+        layout5.setVerticalGroup(
+                layout5.createSequentialGroup()
+                        .addComponent(generate)
+        );
+
 
         GroupLayout overall = new GroupLayout(this);
         this.setLayout(overall);
@@ -135,7 +152,8 @@ public class ControlPanel extends JPanel {
                                 .addComponent(loadImage)
                                 .addComponent(training)
                                 .addComponent(saveLoad)
-                                .addComponent(drawing))
+                                .addComponent(drawing)
+                                .addComponent(artificialData))
         );
         overall.setVerticalGroup(
                 overall.createSequentialGroup()
@@ -143,6 +161,7 @@ public class ControlPanel extends JPanel {
                         .addComponent(training)
                         .addComponent(saveLoad)
                         .addComponent(drawing)
+                        .addComponent(artificialData)
         );
 
 
@@ -296,6 +315,13 @@ public class ControlPanel extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 DrawingPanel drawingPanel = DrawingPanel.getInstance();
                 drawingPanel.resetImage();
+            }
+        });
+
+        generate.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.out.println("I work!");
             }
         });
     }
