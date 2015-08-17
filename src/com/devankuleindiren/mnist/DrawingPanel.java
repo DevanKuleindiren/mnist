@@ -10,7 +10,7 @@ import java.awt.event.MouseMotionListener;
 public class DrawingPanel extends JPanel implements MouseListener, MouseMotionListener {
 
     private static DrawingPanel instance = null;
-    private int zoom = 10; //Number of pixels used to represent a cell
+    private int zoom = 15; //Number of pixels used to represent a cell
     private int width = 1; //Width of game board in pixels
     private int height = 1;//Height of game board in pixels
     private Image image = null;
@@ -109,7 +109,21 @@ public class DrawingPanel extends JPanel implements MouseListener, MouseMotionLi
             int row = y / zoom;
             int col = x / zoom;
 
-            image.setPixel(row, col, image.getPixel(row, col) + 100);
+            int radius = 2;
+
+            for (int r = row - radius; r <= row + radius; r++) {
+                for (int c = col - radius; c <= col + radius; c++) {
+                    int modR2 = (int) Math.pow(r - row,2);
+                    int modC2 = (int) Math.pow(c - col,2);
+                    double mod = Math.sqrt(modR2 + modC2);
+
+                    int val = (int) (255 - ((255.0 / (double) radius) * mod));
+                    if (val < 0) val = 0;
+
+                    image.setPixel(r, c, image.getPixel(r, c) + val);
+                }
+            }
+
             repaint();
         }
     }

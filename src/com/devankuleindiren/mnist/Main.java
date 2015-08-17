@@ -15,7 +15,7 @@ public class Main extends JFrame {
     public Main() {
         super("MNIST");
         dataLoader = DataLoader.getInstance();
-        setSize(640, 480);
+        setSize(800, 600);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
         JComponent DrawingPanel = createDrawingPanel();
