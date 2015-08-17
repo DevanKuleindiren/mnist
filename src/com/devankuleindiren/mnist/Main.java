@@ -8,9 +8,10 @@ import javax.swing.border.EtchedBorder;
 
 public class Main extends JFrame {
 
-    private DrawingPanel DrawingPanel;
     private DataLoader dataLoader;
+    private DrawingPanel DrawingPanel;
     private ControlPanel controlPanel;
+    private ArtificialDataPanel artificialDataPanel;
 
     public Main() {
         super("MNIST");
@@ -22,11 +23,13 @@ public class Main extends JFrame {
         add(DrawingPanel, BorderLayout.CENTER);
         JComponent controlPanel = createControlPanel();
         add(controlPanel, BorderLayout.WEST);
+        JComponent artificialDataPanel = createArtificialDataPanel();
+        add(artificialDataPanel, BorderLayout.SOUTH);
     }
 
     private void addBorder(JComponent component, String title) {
         Border etch = BorderFactory.createEtchedBorder(EtchedBorder.LOWERED);
-        Border tb = BorderFactory.createTitledBorder(etch,title);
+        Border tb = BorderFactory.createTitledBorder(etch, title);
         component.setBorder(tb);
     }
 
@@ -49,7 +52,19 @@ public class Main extends JFrame {
         return holder;
     }
 
-    private void resetWorld() {
+    private JComponent createArtificialDataPanel() {
+        JPanel holder = new JPanel();
+        addBorder(holder, "Artificial Data");
+        ArtificialDataPanel result = ArtificialDataPanel.getInstance();
+        this.artificialDataPanel = result;
+        holder.add(result);
+        JScrollPane scrollPane = new JScrollPane(holder);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+        return scrollPane;
+    }
+
+    private void setUp() {
 
         Image image = null;
         try {
@@ -67,7 +82,7 @@ public class Main extends JFrame {
 
     public static void main(String[] args) {
         Main gui = new Main();
-        gui.resetWorld();
+        gui.setUp();
         gui.setVisible(true);
     }
 }
