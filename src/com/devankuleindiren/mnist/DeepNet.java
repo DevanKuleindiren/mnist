@@ -163,7 +163,7 @@ public class DeepNet {
 
 		//HIDDEN LAYER TO OUTPUT LAYER
 		outputActs = useNetP2(hiddenActs, beta);
-		
+
 		return outputActs;
 	}
 	

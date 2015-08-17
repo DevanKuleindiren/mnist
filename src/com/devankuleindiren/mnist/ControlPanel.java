@@ -6,7 +6,6 @@ import javax.swing.border.EtchedBorder;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
-import java.util.ArrayList;
 
 public class ControlPanel extends JPanel {
 
@@ -14,12 +13,13 @@ public class ControlPanel extends JPanel {
 
     private JButton nextImage;
     private JButton train;
+    private JLabel label;
+    private JLabel progress;
     private JButton classify;
+    private JLabel result;
     private JButton save;
     private JButton load;
-    private JLabel progress;
-    private JLabel label;
-    private JLabel result;
+    private JButton erase;
 
     private int trainIter = 1000;
     private int batchSize = 1000;
@@ -39,6 +39,8 @@ public class ControlPanel extends JPanel {
     private ControlPanel() {
         super();
 
+        // SECTIONS OF THE CONTROL PANEL
+
         JPanel loadImage = new JPanel();
         addBorder(loadImage, "Load Image");
 
@@ -48,14 +50,18 @@ public class ControlPanel extends JPanel {
         JPanel saveLoad = new JPanel();
         addBorder(saveLoad, "File");
 
+        final JPanel drawing = new JPanel();
+        addBorder(drawing, "Drawing");
+
         nextImage = new JButton("Next image");
         train = new JButton("Train");
+        label = new JLabel("-");
+        progress = new JLabel("");
         classify = new JButton("Classify");
+        result = new JLabel("-");
         save = new JButton("Save weights");
         load = new JButton("Load weights");
-        progress = new JLabel("");
-        label = new JLabel("-");
-        result = new JLabel("-");
+        erase = new JButton("Erase");
 
 
         GroupLayout layout = new GroupLayout(loadImage);
@@ -106,6 +112,19 @@ public class ControlPanel extends JPanel {
                         .addComponent(load)
         );
 
+        GroupLayout layout4 = new GroupLayout(drawing);
+        drawing.setLayout(layout4);
+        layout4.setHorizontalGroup(
+                layout4.createSequentialGroup()
+                        .addGroup(layout4.createParallelGroup(GroupLayout.Alignment.LEADING)
+                                        .addComponent(erase)
+                        )
+        );
+        layout4.setVerticalGroup(
+                layout4.createSequentialGroup()
+                        .addComponent(erase)
+        );
+
 
         GroupLayout overall = new GroupLayout(this);
         this.setLayout(overall);
@@ -115,39 +134,17 @@ public class ControlPanel extends JPanel {
                         .addGroup(overall.createParallelGroup(GroupLayout.Alignment.LEADING)
                                 .addComponent(loadImage)
                                 .addComponent(training)
-                                .addComponent(saveLoad))
+                                .addComponent(saveLoad)
+                                .addComponent(drawing))
         );
         overall.setVerticalGroup(
                 overall.createSequentialGroup()
                         .addComponent(loadImage)
                         .addComponent(training)
                         .addComponent(saveLoad)
+                        .addComponent(drawing)
         );
 
-
-//        layout.setHorizontalGroup(
-//                layout.createSequentialGroup()
-//                        .addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING)
-//                                .addComponent(nextImage)
-//                                .addComponent(label)
-//                                .addComponent(train)
-//                                .addComponent(progress)
-//                                .addComponent(classify)
-//                                .addComponent(result)
-//                                .addComponent(save)
-//                                .addComponent(load))
-//        );
-//        layout.setVerticalGroup(
-//                layout.createSequentialGroup()
-//                        .addComponent(nextImage)
-//                        .addComponent(label)
-//                        .addComponent(train)
-//                        .addComponent(progress)
-//                        .addComponent(classify)
-//                        .addComponent(result)
-//                        .addComponent(save)
-//                        .addComponent(load)
-//        );
 
         nextImage.addActionListener(new ActionListener() {
             @Override
@@ -291,6 +288,14 @@ public class ControlPanel extends JPanel {
                 } catch (InvalidWeightFormatException exception) {
                     System.out.println(exception.getMessage());
                 }
+            }
+        });
+
+        erase.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                DrawingPanel drawingPanel = DrawingPanel.getInstance();
+                drawingPanel.resetImage();
             }
         });
     }

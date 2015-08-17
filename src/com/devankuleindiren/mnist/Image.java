@@ -77,7 +77,7 @@ public class Image {
 
                 if (g.hitClip(colPos,rowPos,nextCol-colPos,nextRow-rowPos)) {
                     int color = getCell(row, col);
-                    g.setColor(new Color(color, color, color));
+                    g.setColor(new Color(255 - color, 255 - color, 255 - color));
                     g.fillRect(colPos,rowPos,nextCol-colPos,nextRow-rowPos);
                 }
             }
