@@ -3,6 +3,7 @@ package com.devankuleindiren.mnist;
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Random;
 
 /**
  * Created by Devan Kuleindiren on 17/08/15.
@@ -46,5 +47,24 @@ public class ArtificialDataPanel extends JPanel {
                 layout.createSequentialGroup()
                         .addGroup(parallelGroup));
         layout.setHorizontalGroup(sequentialGroup);
+    }
+
+    public void generateDataWithImage (Image image) {
+        Random random = new Random();
+        int maxShift = 3;
+
+        for (SnapShot s : snapShots) {
+            int horizontalShift = random.nextInt((maxShift * 2) + 1) - maxShift;
+            System.out.println(horizontalShift);
+            int verticalShift = random.nextInt((maxShift * 2) + 1) - maxShift;
+            System.out.println(verticalShift);
+            System.out.println();
+
+            Image clone = (Image) image.clone();
+            clone.shiftHorizontal(horizontalShift);
+            clone.shiftVertical(verticalShift);
+
+            s.update(clone);
+        }
     }
 }

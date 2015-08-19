@@ -18,6 +18,10 @@ public class SnapShot extends JPanel {
         repaint();
     }
 
+    public void update() {
+        repaint();
+    }
+
     public Dimension getPreferredSize() {
         return new Dimension(image.getWidth() * zoom, image.getHeight() * zoom);
     }
@@ -35,5 +39,9 @@ public class SnapShot extends JPanel {
         g.fillRect(0, 0, width, height);
         image.draw(g, width, height);
         g.setColor(Color.LIGHT_GRAY);
+    }
+
+    public Image getImage () {
+        return image;
     }
 }

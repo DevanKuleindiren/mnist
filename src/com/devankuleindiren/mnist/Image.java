@@ -2,7 +2,7 @@ package com.devankuleindiren.mnist;
 
 import java.awt.*;
 
-public class Image {
+public class Image implements Cloneable {
 
     private int[][] pixels;
     private int width = 0;
@@ -97,6 +97,85 @@ public class Image {
         vector[0][vector.length - 1] = -1;
 
         return vector;
+    }
+
+    @Override
+    public Object clone() {
+        try {
+            Image clone = (Image) super.clone();
+            for (int row = 0; row < pixels.length; row++) {
+                for (int col = 0; col < pixels[0].length; col++) {
+                    clone.pixels[row][col] = pixels[row][col];
+                }
+            }
+            return clone;
+
+        } catch (CloneNotSupportedException e) {
+            System.out.println(e.getMessage());
+            return null;
+        }
+    }
+
+    public void shiftHorizontal (int shift) {
+        if (shift > 0) {
+
+            for (int col = pixels[0].length - 1; col >= shift; col--) {
+                for (int row = 0; row < pixels.length; row++) {
+                    setPixel(row, col, getPixel(row, col - shift));
+                }
+            }
+
+            for (int col = 0; col < shift; col++) {
+                for (int row = 0; row < pixels.length; row++) {
+                    setPixel(row, col, 0);
+                }
+            }
+
+        } else if (shift < 0) {
+
+            for (int col = 0; col <= pixels[0].length - 1 + shift; col++) {
+                for (int row = 0; row < pixels.length; row++) {
+                    setPixel(row, col, getPixel(row, col - shift));
+                }
+            }
+
+            for (int col = pixels[0].length - 1; col > pixels[0].length - 1 + shift; col--) {
+                for (int row = 0; row < pixels.length; row++) {
+                    setPixel(row, col, 0);
+                }
+            }
+        }
+    }
+
+    public void shiftVertical (int shift) {
+        if (shift > 0) {
+
+            for (int row = pixels.length - 1; row >= shift; row--) {
+                for (int col = 0; col < pixels[0].length; col++) {
+                    setPixel(row, col, getPixel(row - shift, col));
+                }
+            }
+
+            for (int row = 0; row < shift; row++) {
+                for (int col = 0; col < pixels[0].length; col++) {
+                    setPixel(row, col, 0);
+                }
+            }
+
+        } else if (shift < 0) {
+
+            for (int row = 0; row <= pixels.length - 1 + shift; row++) {
+                for (int col = 0; col < pixels[0].length; col++) {
+                    setPixel(row, col, getPixel(row - shift, col));
+                }
+            }
+
+            for (int row = pixels.length - 1; row > pixels.length - 1 + shift; row--) {
+                for (int col = 0; col < pixels[0].length; col++) {
+                    setPixel(row, col, 0);
+                }
+            }
+        }
     }
 
 }

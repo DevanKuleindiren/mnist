@@ -65,7 +65,6 @@ public class DrawingPanel extends JPanel implements MouseListener, MouseMotionLi
                 image.setPixel(row, col, 0);
             }
         }
-
         repaint();
     }
 

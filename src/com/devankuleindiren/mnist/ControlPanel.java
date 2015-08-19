@@ -62,7 +62,7 @@ public class ControlPanel extends JPanel {
         JPanel drawing = new JPanel();
         addBorder(drawing, "Drawing");
 
-        JPanel artificialData = new JPanel();
+        final JPanel artificialData = new JPanel();
         addBorder(artificialData, "Artificial Data");
 
         loadImageSource = new JTextField("mnist_test.csv");
@@ -350,7 +350,9 @@ public class ControlPanel extends JPanel {
         generate.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                System.out.println("I work!");
+                ArtificialDataPanel artificialDataPanel = ArtificialDataPanel.getInstance();
+                DrawingPanel drawingPanel = DrawingPanel.getInstance();
+                artificialDataPanel.generateDataWithImage(drawingPanel.getImage());
             }
         });
     }
