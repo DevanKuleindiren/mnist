@@ -1,11 +1,13 @@
 package com.devankuleindiren.mnist;
 
+import javax.swing.*;
 import java.io.*;
 
 public class DataLoader {
 
-    private static BufferedReader reader;
-    private static BufferedReader trainReader;
+    private static BufferedReader loadImageReader;
+    private static String loadImageFileName;
+
     private static DataLoader instance = null;
     private DataLoader () {}
 
@@ -13,23 +15,25 @@ public class DataLoader {
         if (instance == null) {
             instance = new DataLoader();
             try {
-                reader = new BufferedReader(new FileReader("mnist_test.csv"));
-                trainReader = new BufferedReader(new FileReader("mnist_train.csv"));
+                loadImageReader = new BufferedReader(new FileReader("mnist_test.csv"));
+                loadImageFileName = "mnist_test.csv";
             } catch (IOException e) {
                 System.out.println(e.getMessage());
             }
         }
-
         return instance;
     }
 
-    public static Batch getInputBatch (int batchSize) {
+    public static Batch getInputBatch (int batchSize, String fileName) throws IOException {
+
         double[][] inputs = new double[batchSize][785];
         double[][] targets = new double[batchSize][10];
 
-        for (int i = 0; i < batchSize; i++) {
-            try {
-                String temp = trainReader.readLine();
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(fileName));
+
+            for (int i = 0; i < batchSize; i++) {
+                String temp = reader.readLine();
                 String[] values = temp.split(",");
 
                 for (int j = 1; j < values.length; j++) inputs[i][j - 1] = (Double.parseDouble(values[j]) / 255.0);
@@ -37,31 +41,49 @@ public class DataLoader {
 
                 int target = Integer.parseInt(values[0]);
                 targets[i][target] = 1;
+            }
 
-            } catch (IOException e) {
-                break;
-                //TODO: HANDLE THIS PROPERLY
-            } catch (NumberFormatException e) {
-                System.out.println(e.getMessage());
+            return new Batch(inputs, targets);
+
+        } catch (FileNotFoundException e) {
+            throw new IOException(fileName + " cannot be found.");
+        } catch (EOFException e) {
+            throw new IOException("Reached end of file: " + fileName + ". Requested input batch too large.");
+        } catch (IOException e) {
+            throw new IOException("Error reading batch from: " + fileName);
+        }
+    }
+
+    public static Image next (String fileName) throws IOException {
+
+        if (!fileName.equals(loadImageFileName)) {
+            try {
+                loadImageReader = new BufferedReader(new FileReader(fileName));
+                loadImageFileName = fileName;
+            } catch (FileNotFoundException e) {
+                throw new IOException(fileName + " cannot be found.");
             }
         }
 
-        return new Batch(inputs, targets);
-    }
+        try {
+            String temp = loadImageReader.readLine();
+            String[] values = temp.split(",");
 
-    public static Image next () throws IOException {
-        String temp = reader.readLine();
-        String[] values = temp.split(",");
+            int[][] data = new int[28][28];
 
-        int[][] data = new int[28][28];
+            String label = values[0];
 
-        String label = values[0];
+            for (int i = 1; i < values.length; i++) {
+                data[(i - 1) / 28][(i - 1) % 28] = Integer.parseInt(values[i]);
+            }
 
-        for (int i = 1; i < values.length; i++) {
-            data[(i - 1) / 28][(i - 1) % 28] = Integer.parseInt(values[i]);
+            return new Image(data, label);
+
+        } catch (EOFException e) {
+            throw new IOException("Reached the end of " + fileName);
+        } catch (IOException e) {
+            throw new IOException("Error reading from " + fileName);
         }
-
-        return new Image(data, label);
     }
 
 }

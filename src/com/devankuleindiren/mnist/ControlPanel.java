@@ -11,15 +11,23 @@ public class ControlPanel extends JPanel {
 
     private static ControlPanel instance = null;
 
+    private JTextField loadImageSource;
     private JButton nextImage;
-    private JButton train;
     private JLabel label;
+
+    private JTextField trainingSource;
+    private JButton train;
     private JLabel progress;
     private JButton classify;
     private JLabel result;
+
+    private JTextField weightsSource;
     private JButton save;
     private JButton load;
+
     private JButton erase;
+
+    private JTextField artificialDataSource;
     private JButton generate;
 
     private int trainIter = 1000;
@@ -57,15 +65,19 @@ public class ControlPanel extends JPanel {
         JPanel artificialData = new JPanel();
         addBorder(artificialData, "Artificial Data");
 
+        loadImageSource = new JTextField("mnist_test.csv");
         nextImage = new JButton("Next image");
-        train = new JButton("Train");
         label = new JLabel("-");
+        trainingSource = new JTextField("mnist_train.csv");
+        train = new JButton("Train");
         progress = new JLabel("");
         classify = new JButton("Classify");
         result = new JLabel("-");
+        weightsSource = new JTextField("weights.txt");
         save = new JButton("Save weights");
         load = new JButton("Load weights");
         erase = new JButton("Erase");
+        artificialDataSource = new JTextField("artificialData.txt");
         generate = new JButton("Generate");
 
         GroupLayout layout = new GroupLayout(loadImage);
@@ -73,11 +85,13 @@ public class ControlPanel extends JPanel {
         layout.setHorizontalGroup(
                 layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                                .addComponent(loadImageSource)
                                 .addComponent(nextImage)
                                 .addComponent(label))
         );
         layout.setVerticalGroup(
                 layout.createSequentialGroup()
+                        .addComponent(loadImageSource)
                         .addComponent(nextImage)
                         .addComponent(label)
         );
@@ -87,14 +101,16 @@ public class ControlPanel extends JPanel {
         layout2.setHorizontalGroup(
                 layout2.createSequentialGroup()
                         .addGroup(layout2.createParallelGroup(GroupLayout.Alignment.LEADING)
-                                .addComponent(train)
-                                .addComponent(progress)
-                                .addComponent(classify)
-                                .addComponent(result)
+                                        .addComponent(trainingSource)
+                                        .addComponent(train)
+                                        .addComponent(progress)
+                                        .addComponent(classify)
+                                        .addComponent(result)
                         )
         );
         layout2.setVerticalGroup(
                 layout2.createSequentialGroup()
+                        .addComponent(trainingSource)
                         .addComponent(train)
                         .addComponent(progress)
                         .addComponent(classify)
@@ -106,12 +122,14 @@ public class ControlPanel extends JPanel {
         layout3.setHorizontalGroup(
                 layout3.createSequentialGroup()
                         .addGroup(layout3.createParallelGroup(GroupLayout.Alignment.LEADING)
+                                        .addComponent(weightsSource)
                                         .addComponent(save)
                                         .addComponent(load)
                         )
         );
         layout3.setVerticalGroup(
                 layout3.createSequentialGroup()
+                        .addComponent(weightsSource)
                         .addComponent(save)
                         .addComponent(load)
         );
@@ -134,11 +152,13 @@ public class ControlPanel extends JPanel {
         layout5.setHorizontalGroup(
                 layout5.createSequentialGroup()
                         .addGroup(layout5.createParallelGroup(GroupLayout.Alignment.LEADING)
+                                        .addComponent(artificialDataSource)
                                         .addComponent(generate)
                         )
         );
         layout5.setVerticalGroup(
                 layout5.createSequentialGroup()
+                        .addComponent(artificialDataSource)
                         .addComponent(generate)
         );
 
@@ -169,15 +189,14 @@ public class ControlPanel extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 DataLoader dataLoader = DataLoader.getInstance();
-                Image image = null;
                 try {
-                    image = dataLoader.next();
+                    Image image = dataLoader.next(loadImageSource.getText());
+                    DrawingPanel drawingPanel = DrawingPanel.getInstance();
+                    drawingPanel.display(image);
+                    updateLabel(image.getLabel());
                 } catch (IOException exception) {
-                    System.out.println(exception.getMessage());
+                    JOptionPane.showMessageDialog(null, exception.getMessage());
                 }
-                DrawingPanel drawingPanel = DrawingPanel.getInstance();
-                drawingPanel.display(image);
-                updateLabel(image.getLabel());
             }
         });
 
@@ -188,18 +207,22 @@ public class ControlPanel extends JPanel {
 
                 // LOAD DATA FROM DATA LOADER
                 System.out.println("LOADING INPUT BATCH...");
-                final Batch batch = DataLoader.getInputBatch(batchSize);
+                try {
+                    final Batch batch = DataLoader.getInputBatch(batchSize, trainingSource.getText());
 
-                System.out.println("INSTANTIATING DEEPNET...");
-                final DeepNet deepNet = DeepNet.getInstance(inputNodesNo, hiddenNeuronNo, outputNeuronNo);
+                    System.out.println("INSTANTIATING DEEPNET...");
+                    final DeepNet deepNet = DeepNet.getInstance(inputNodesNo, hiddenNeuronNo, outputNeuronNo);
 
-                System.out.println("TRAINING DEEPNET...");
-                double error = deepNet.trainNet(batch.getInputs(), batch.getTargets(), lR, beta, trainIter);
-                System.out.println();
-                System.out.println();
-                System.out.println("DEEPNET TRAINED. ERROR: " + Double.toString((error / (batchSize * 10)) * 100) + " %");
+                    System.out.println("TRAINING DEEPNET...");
+                    double error = deepNet.trainNet(batch.getInputs(), batch.getTargets(), lR, beta, trainIter);
+                    System.out.println();
+                    System.out.println();
+                    System.out.println("DEEPNET TRAINED. ERROR: " + Double.toString((error / (batchSize * 10)) * 100) + " %");
 
-                progress.setText("Net trained.");
+                    progress.setText("Net trained.");
+                } catch (IOException exception) {
+                    JOptionPane.showMessageDialog(null, exception.getMessage());
+                }
             }
         });
 
@@ -226,7 +249,7 @@ public class ControlPanel extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter("weights.txt", false));
+                    BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(weightsSource.getText(), false));
 
                     // WRITE METADATA
                     bufferedWriter.write(inputNodesNo + "," + hiddenNeuronNo + "," + outputNeuronNo + "\n");
@@ -247,10 +270,13 @@ public class ControlPanel extends JPanel {
                             bufferedWriter.write(Double.toString(deepNet.getWeight2(hiddenNeuron, outputNeuron)) + ",");
                         }
                     }
-
                     bufferedWriter.close();
+                    JOptionPane.showMessageDialog(null, "Saved weights to " + weightsSource.getText());
+
+                } catch (FileNotFoundException exception) {
+                    JOptionPane.showMessageDialog(null, weightsSource.getText() + " could not be found.");
                 } catch (IOException exception) {
-                    System.out.println("Could not save weights.");
+                    JOptionPane.showMessageDialog(null, weightsSource.getText() + " could not be saved to.");
                 }
             }
         });
@@ -259,7 +285,7 @@ public class ControlPanel extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    BufferedReader bufferedReader = new BufferedReader(new FileReader("weights.txt"));
+                    BufferedReader bufferedReader = new BufferedReader(new FileReader(weightsSource.getText()));
 
                     String metadataLine = bufferedReader.readLine();
                     String[] metadata = metadataLine.split(",");
@@ -299,13 +325,16 @@ public class ControlPanel extends JPanel {
                         }
 
                         bufferedReader.close();
+                        JOptionPane.showMessageDialog(null, "Loaded weights from " + weightsSource.getText());
 
                     } else throw new InvalidWeightFormatException("The network of weights in the file is invalid.");
 
+                } catch (FileNotFoundException exception) {
+                    JOptionPane.showMessageDialog(null, weightsSource.getText() + " could not be found.");
                 } catch (IOException exception) {
-                    System.out.println("Could not load weights.");
+                    JOptionPane.showMessageDialog(null, weightsSource.getText() + " could not be loaded.");
                 } catch (InvalidWeightFormatException exception) {
-                    System.out.println(exception.getMessage());
+                    JOptionPane.showMessageDialog(null, exception.getMessage());
                 }
             }
         });

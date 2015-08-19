@@ -16,7 +16,7 @@ public class Main extends JFrame {
     public Main() {
         super("MNIST");
         dataLoader = DataLoader.getInstance();
-        setSize(800, 600);
+        setSize(900, 700);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
         JComponent DrawingPanel = createDrawingPanel();
@@ -68,7 +68,7 @@ public class Main extends JFrame {
 
         Image image = null;
         try {
-            image = dataLoader.next();
+            image = dataLoader.next("mnist_test.csv");
             controlPanel.updateLabel(image.getLabel());
         } catch (IOException e) {
             JOptionPane.showMessageDialog(this,
