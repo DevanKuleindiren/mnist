@@ -52,17 +52,21 @@ public class ArtificialDataPanel extends JPanel {
     public void generateDataWithImage (Image image) {
         Random random = new Random();
         int maxShift = 3;
+        int maxBlurRadius = 2;
 
         for (SnapShot s : snapShots) {
             int horizontalShift = random.nextInt((maxShift * 2) + 1) - maxShift;
             System.out.println(horizontalShift);
             int verticalShift = random.nextInt((maxShift * 2) + 1) - maxShift;
             System.out.println(verticalShift);
+            double blur = (random.nextDouble() / 2.0) + 0.1;
+            int radius = random.nextInt(maxBlurRadius + 1);
             System.out.println();
 
             Image clone = (Image) image.clone();
             clone.shiftHorizontal(horizontalShift);
             clone.shiftVertical(verticalShift);
+            clone.blur(blur, radius);
 
             s.update(clone);
         }

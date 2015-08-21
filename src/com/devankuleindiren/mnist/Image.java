@@ -27,7 +27,7 @@ public class Image implements Cloneable {
     }
 
     public void setPixel (int row, int col, int value) {
-        if (row >= 0 && row < pixels.length
+        if (row >= 0 && row < height
                 && col >= 0 && col < pixels[0].length
                 && value >= 0) {
             if (value <= 255) pixels[row][col] = value;
@@ -36,8 +36,8 @@ public class Image implements Cloneable {
     }
 
     public int getPixel (int row, int col) {
-        if (row >= 0 && row < pixels.length
-                && col >= 0 && col < pixels[0].length) return pixels[row][col];
+        if (row >= 0 && row < height
+                && col >= 0 && col < width) return pixels[row][col];
         return 0;
     }
 
@@ -86,11 +86,11 @@ public class Image implements Cloneable {
 
     public double[][] pixelsToVector () {
 
-        double[][] vector = new double[1][(pixels.length * pixels[0].length) + 1];
+        double[][] vector = new double[1][(height * width) + 1];
 
-        for (int row = 0; row < pixels.length; row++) {
-            for (int col = 0; col < pixels[0].length; col++) {
-                vector[0][(row * pixels[0].length) + col] = pixels[row][col];
+        for (int row = 0; row < height; row++) {
+            for (int col = 0; col < width; col++) {
+                vector[0][(row * width) + col] = pixels[row][col];
             }
         }
 
@@ -103,8 +103,9 @@ public class Image implements Cloneable {
     public Object clone() {
         try {
             Image clone = (Image) super.clone();
-            for (int row = 0; row < pixels.length; row++) {
-                for (int col = 0; col < pixels[0].length; col++) {
+            clone.pixels = new int[height][width];
+            for (int row = 0; row < height; row++) {
+                for (int col = 0; col < width; col++) {
                     clone.pixels[row][col] = pixels[row][col];
                 }
             }
@@ -119,28 +120,28 @@ public class Image implements Cloneable {
     public void shiftHorizontal (int shift) {
         if (shift > 0) {
 
-            for (int col = pixels[0].length - 1; col >= shift; col--) {
-                for (int row = 0; row < pixels.length; row++) {
+            for (int col = width - 1; col >= shift; col--) {
+                for (int row = 0; row < height; row++) {
                     setPixel(row, col, getPixel(row, col - shift));
                 }
             }
 
             for (int col = 0; col < shift; col++) {
-                for (int row = 0; row < pixels.length; row++) {
+                for (int row = 0; row < height; row++) {
                     setPixel(row, col, 0);
                 }
             }
 
         } else if (shift < 0) {
 
-            for (int col = 0; col <= pixels[0].length - 1 + shift; col++) {
-                for (int row = 0; row < pixels.length; row++) {
+            for (int col = 0; col <= width - 1 + shift; col++) {
+                for (int row = 0; row < height; row++) {
                     setPixel(row, col, getPixel(row, col - shift));
                 }
             }
 
-            for (int col = pixels[0].length - 1; col > pixels[0].length - 1 + shift; col--) {
-                for (int row = 0; row < pixels.length; row++) {
+            for (int col = width - 1; col > width - 1 + shift; col--) {
+                for (int row = 0; row < height; row++) {
                     setPixel(row, col, 0);
                 }
             }
@@ -150,31 +151,53 @@ public class Image implements Cloneable {
     public void shiftVertical (int shift) {
         if (shift > 0) {
 
-            for (int row = pixels.length - 1; row >= shift; row--) {
-                for (int col = 0; col < pixels[0].length; col++) {
+            for (int row = height - 1; row >= shift; row--) {
+                for (int col = 0; col < width; col++) {
                     setPixel(row, col, getPixel(row - shift, col));
                 }
             }
 
             for (int row = 0; row < shift; row++) {
-                for (int col = 0; col < pixels[0].length; col++) {
+                for (int col = 0; col < width; col++) {
                     setPixel(row, col, 0);
                 }
             }
 
         } else if (shift < 0) {
 
-            for (int row = 0; row <= pixels.length - 1 + shift; row++) {
-                for (int col = 0; col < pixels[0].length; col++) {
+            for (int row = 0; row <= height - 1 + shift; row++) {
+                for (int col = 0; col < width; col++) {
                     setPixel(row, col, getPixel(row - shift, col));
                 }
             }
 
-            for (int row = pixels.length - 1; row > pixels.length - 1 + shift; row--) {
-                for (int col = 0; col < pixels[0].length; col++) {
+            for (int row = height - 1; row > height - 1 + shift; row--) {
+                for (int col = 0; col < width; col++) {
                     setPixel(row, col, 0);
                 }
             }
+        }
+    }
+
+    public void blur (double blur, int blurRadius) {
+
+        if (blurRadius != 0) {
+            int[][] temp = new int[height][width];
+
+            for (int row = 0; row < height; row++) {
+                for (int col = 0; col < width; col++) {
+                    double sum = 0;
+                    for (int i = row - blurRadius; i <= row + blurRadius; i++) {
+                        for (int j = col - blurRadius; j <= col + blurRadius; j++) {
+                            sum += getPixel(i, j);
+                        }
+                    }
+                    temp[row][col] = (int) (blur * sum);
+                    if (temp[row][col] > 255) temp[row][col] = 255;
+                }
+            }
+
+            pixels = temp;
         }
     }
 
