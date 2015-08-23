@@ -84,12 +84,5 @@ public class Main extends JFrame {
         Main gui = new Main();
         gui.setUp();
         gui.setVisible(true);
-
-        Image A = new Image(28, 28);
-        Image B = (Image) A.clone();
-
-        System.out.println(B.getPixel(5, 5));
-        A.setPixel(5, 5, 10);
-        System.out.println(B.getPixel(5, 5));
     }
 }

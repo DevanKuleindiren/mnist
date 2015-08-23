@@ -51,22 +51,46 @@ public class ArtificialDataPanel extends JPanel {
 
     public void generateDataWithImage (Image image) {
         Random random = new Random();
-        int maxShift = 3;
-        int maxBlurRadius = 2;
+        int maxShift = 2;
+        int maxBlurRadius = 1;
+        int maxPinShift = 8;
 
         for (SnapShot s : snapShots) {
-            int horizontalShift = random.nextInt((maxShift * 2) + 1) - maxShift;
-            System.out.println(horizontalShift);
-            int verticalShift = random.nextInt((maxShift * 2) + 1) - maxShift;
-            System.out.println(verticalShift);
-            double blur = (random.nextDouble() / 2.0) + 0.1;
-            int radius = random.nextInt(maxBlurRadius + 1);
-            System.out.println();
 
             Image clone = (Image) image.clone();
+
+            // Curve with Pin shift
+            if (random.nextInt(2) == 0) {
+                double horizontalCurve = (random.nextDouble() - 0.5) * 10;
+                int horizontalPinShift = random.nextInt((maxPinShift * 2) + 1) - maxPinShift;
+                clone.curveHorizontal(horizontalCurve, horizontalPinShift);
+            }
+            if (random.nextInt(2) == 0) {
+                double verticalCurve = (random.nextDouble() - 0.5) * 10;
+                int verticalPinShift = random.nextInt((maxPinShift * 2) + 1) - maxPinShift;
+                clone.curveVertical(verticalCurve, verticalPinShift);
+            }
+
+            // Shift
+            int horizontalShift = random.nextInt((maxShift * 2) + 1) - maxShift;
+            int verticalShift = random.nextInt((maxShift * 2) + 1) - maxShift;
             clone.shiftHorizontal(horizontalShift);
             clone.shiftVertical(verticalShift);
-            clone.blur(blur, radius);
+
+//            // Blur
+//            double blur = (random.nextDouble() / 20.0) + 0.15;
+//            int radius = random.nextInt(maxBlurRadius + 1);
+//            clone.blur(blur, radius);
+
+            // Scale
+            if (random.nextInt(5) == 0) {
+                double horizontalStretch = (random.nextDouble() / 4.0) + 1.0;
+                clone.stretchHorizontal(clone.getWidth() / 2, horizontalStretch);
+            }
+            if (random.nextInt(5) == 0) {
+                double verticalStretch = (random.nextDouble() / 4.0) + 1.0;
+                clone.stretchVertical(clone.getWidth() / 2, verticalStretch);
+            }
 
             s.update(clone);
         }
