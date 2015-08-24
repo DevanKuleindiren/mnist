@@ -55,7 +55,9 @@ public class ArtificialDataPanel extends JPanel {
         int maxBlurRadius = 1;
         int maxPinShift = 8;
 
-        for (SnapShot s : snapShots) {
+        snapShots.get(0).update(image);
+
+        for (int i = 1; i < snapShots.size(); i++) {
 
             Image clone = (Image) image.clone();
 
@@ -64,8 +66,7 @@ public class ArtificialDataPanel extends JPanel {
                 double horizontalCurve = (random.nextDouble() - 0.5) * 10;
                 int horizontalPinShift = random.nextInt((maxPinShift * 2) + 1) - maxPinShift;
                 clone.curveHorizontal(horizontalCurve, horizontalPinShift);
-            }
-            if (random.nextInt(2) == 0) {
+            } else {
                 double verticalCurve = (random.nextDouble() - 0.5) * 10;
                 int verticalPinShift = random.nextInt((maxPinShift * 2) + 1) - maxPinShift;
                 clone.curveVertical(verticalCurve, verticalPinShift);
@@ -92,7 +93,11 @@ public class ArtificialDataPanel extends JPanel {
                 clone.stretchVertical(clone.getWidth() / 2, verticalStretch);
             }
 
-            s.update(clone);
+            snapShots.get(i).update(clone);
         }
+    }
+
+    public ArrayList<SnapShot> getSnapShots () {
+        return snapShots;
     }
 }

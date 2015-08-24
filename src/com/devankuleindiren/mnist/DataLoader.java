@@ -39,7 +39,14 @@ public class DataLoader {
                 for (int j = 1; j < values.length; j++) inputs[i][j - 1] = (Double.parseDouble(values[j]) / 255.0);
                 inputs[i][784] = -1;
 
-                int target = Integer.parseInt(values[0]);
+                int target;
+                if (values[0].equals("+")) {
+                    target = 10;
+                } else if (values[0].equals("-")) {
+                    target = 11;
+                } else {
+                    target = Integer.parseInt(values[0]);
+                }
                 targets[i][target] = 1;
             }
 
