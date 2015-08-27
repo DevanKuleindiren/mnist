@@ -213,48 +213,62 @@ public class Image implements Cloneable {
         return sum;
     }
 
-    private void fillGapsHorizontal () {
-        Image copy = (Image) this.clone();
-        for (int row = 0; row < height; row++) {
-            for (int col = 0; col < width; col++) {
-                if (getPixel(row, col) == 0) {
-                    int max1 = 0;
-                    int max2 = 0;
-                    for (int i = -2; i <= 2; i++) {
-                        if (getPixel(row, col + i) > max1) {
-                            max2 = max1;
-                            max1 = getPixel(row, col + i);
-                        } else if (getPixel(row, col + i) > max2) {
-                            max2 = getPixel(row, col + i);
+    private void fillGapsHorizontal (double stretch) {
+        if (stretch > 0) {
+            Image copy = (Image) this.clone();
+            for (int row = 0; row < height; row++) {
+                for (int col = 0; col < width; col++) {
+                    if (getPixel(row, col) == 0) {
+                        int max1 = 0;
+                        int max2 = 0;
+                        if (stretch > 1) {
+                            for (int i = -2; i <= 2; i++) {
+                                if (getPixel(row, col + i) > max1) {
+                                    max2 = max1;
+                                    max1 = getPixel(row, col + i);
+                                } else if (getPixel(row, col + i) > max2) {
+                                    max2 = getPixel(row, col + i);
+                                }
+                            }
+                        } else {
+                            max1 = getPixel(row, col - 1);
+                            max2 = getPixel(row, col + 1);
                         }
+                        copy.setPixel(row, col, (max1 + max2) / 2);
                     }
-                    copy.setPixel(row, col, (max1 + max2) / 2);
                 }
             }
+            this.pixels = copy.pixels;
         }
-        this.pixels = copy.pixels;
     }
 
-    private void fillGapsVertical () {
-        Image copy = (Image) this.clone();
-        for (int row = 0; row < height; row++) {
-            for (int col = 0; col < width; col++) {
-                if (getPixel(row, col) == 0) {
-                    int max1 = 0;
-                    int max2 = 0;
-                    for (int i = -2; i <= 2; i++) {
-                        if (getPixel(row + i, col) > max1) {
-                            max2 = max1;
-                            max1 = getPixel(row + i, col);
-                        } else if (getPixel(row + i, col) > max2) {
-                            max2 = getPixel(row + i, col);
+    private void fillGapsVertical (double stretch) {
+        if (stretch > 0) {
+            Image copy = (Image) this.clone();
+            for (int row = 0; row < height; row++) {
+                for (int col = 0; col < width; col++) {
+                    if (getPixel(row, col) == 0) {
+                        int max1 = 0;
+                        int max2 = 0;
+                        if (stretch > 1) {
+                            for (int i = -2; i <= 2; i++) {
+                                if (getPixel(row + i, col) > max1) {
+                                    max2 = max1;
+                                    max1 = getPixel(row + i, col);
+                                } else if (getPixel(row + i, col) > max2) {
+                                    max2 = getPixel(row + i, col);
+                                }
+                            }
+                        } else {
+                            max1 = getPixel(row - 1, col);
+                            max2 = getPixel(row + 1, col);
                         }
+                        copy.setPixel(row, col, (max1 + max2) / 2);
                     }
-                    copy.setPixel(row, col, (max1 + max2) / 2);
                 }
             }
+            this.pixels = copy.pixels;
         }
-        this.pixels = copy.pixels;
     }
 
     private void copyRow (int fromRow, int toRow, Image from, Image to) {
@@ -278,7 +292,7 @@ public class Image implements Cloneable {
             int newCol = col + ((int) (stretch * (col - center)));
             copyCol(col, newCol, copy, this);
         }
-        fillGapsHorizontal();
+        fillGapsHorizontal(stretch);
     }
 
     public void stretchVertical (int center, double stretch) {
@@ -290,6 +304,6 @@ public class Image implements Cloneable {
             int newRow = row + ((int) (stretch * (row - center)));
             copyRow(row, newRow, copy, this);
         }
-        fillGapsVertical();
+        fillGapsVertical(stretch);
     }
 }
