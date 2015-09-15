@@ -16,7 +16,7 @@ public class Main extends JFrame {
     public Main() {
         super("MNIST");
         dataLoader = DataLoader.getInstance();
-        setSize(900, 700);
+        setSize(1200, 750);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
         JComponent DrawingPanel = createDrawingPanel();
@@ -76,6 +76,9 @@ public class Main extends JFrame {
                     "Error loading data",
                     "An error occurred when importing the data. " + e.getMessage(),
                     JOptionPane.ERROR_MESSAGE);
+        }
+        if (image == null) {
+            image = new Image(28, 28);
         }
         DrawingPanel.display(image);
         repaint();
