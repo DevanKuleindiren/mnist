@@ -17,6 +17,8 @@ public class ControlPanel extends JPanel {
     private JLabel label;
 
     private JTextField trainingSource;
+    private JLabel batchSizeLabel;
+    private JSpinner batchSizeSpinner;
     private JButton train;
     private JButton classify;
     private JLabel result;
@@ -34,7 +36,6 @@ public class ControlPanel extends JPanel {
     private JButton saveData;
 
     private int trainIter = 1000;
-    private int batchSize = 14000;
     private double lR = 0.0001;
     private double beta = 1.0;
 
@@ -72,6 +73,9 @@ public class ControlPanel extends JPanel {
         nextImage = new JButton(Strings.CONTROLPANEL_BUTTONS_NEXT);
         label = new JLabel("-");
         trainingSource = new JTextField(Strings.CONTROLPANEL_SOURCES_TRAINING);
+        batchSizeLabel = new JLabel(Strings.CONTROLPANEL_LABELS_INPUTBATCHSIZE);
+        batchSizeSpinner = new JSpinner();
+        batchSizeSpinner.setModel(new SpinnerNumberModel(14000, 1, 100000, 1));
         train = new JButton(Strings.CONTROLPANEL_BUTTONS_TRAIN);
         classify = new JButton(Strings.CONTROLPANEL_BUTTONS_CLASSIFY);
         result = new JLabel("-");
@@ -108,6 +112,8 @@ public class ControlPanel extends JPanel {
                 layout2.createSequentialGroup()
                         .addGroup(layout2.createParallelGroup(GroupLayout.Alignment.LEADING)
                                         .addComponent(trainingSource)
+                                        .addComponent(batchSizeLabel)
+                                        .addComponent(batchSizeSpinner)
                                         .addComponent(train)
                                         .addComponent(classify)
                                         .addComponent(result)
@@ -118,6 +124,8 @@ public class ControlPanel extends JPanel {
         layout2.setVerticalGroup(
                 layout2.createSequentialGroup()
                         .addComponent(trainingSource)
+                        .addComponent(batchSizeLabel)
+                        .addComponent(batchSizeSpinner)
                         .addComponent(train)
                         .addComponent(classify)
                         .addComponent(result)
@@ -217,6 +225,9 @@ public class ControlPanel extends JPanel {
                 // LOAD DATA FROM DATA LOADER
                 System.out.println("LOADING INPUT BATCH...");
                 try {
+                    int batchSize = (Integer) batchSizeSpinner.getValue();
+                    System.out.println(batchSize);
+
                     final MatrixBatch batch = DataLoader.getMatrixInputBatch(batchSize, trainingSource.getText());
 
                     System.out.println("INSTANTIATING FNN...");

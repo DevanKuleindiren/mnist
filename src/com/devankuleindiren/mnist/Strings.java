@@ -11,6 +11,8 @@ public class Strings {
     public static final String CONTROLPANEL_PANEL_DRAWING = "Drawing";
     public static final String CONTROLPANEL_PANEL_ARTIFICIALDATA = "Artificial Data";
 
+    public static final String CONTROLPANEL_LABELS_INPUTBATCHSIZE = "Input batch size:";
+
     public static final String CONTROLPANEL_BUTTONS_NEXT = "Next Image";
     public static final String CONTROLPANEL_BUTTONS_TRAIN = "Train";
     public static final String CONTROLPANEL_BUTTONS_CLASSIFY = "Classify";

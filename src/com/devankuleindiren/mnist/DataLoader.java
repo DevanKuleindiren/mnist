@@ -102,6 +102,8 @@ public class DataLoader {
             throw new IOException("Reached end of file: " + fileName + ". Requested input batch too large.");
         } catch (IOException e) {
             throw new IOException("Error reading batch from: " + fileName);
+        } catch (NullPointerException e) {
+            throw new IOException("Reached end of file: " + fileName + ". Requested input batch too large.");
         }
     }
 
