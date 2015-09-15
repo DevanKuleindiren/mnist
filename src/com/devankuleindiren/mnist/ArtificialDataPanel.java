@@ -62,11 +62,11 @@ public class ArtificialDataPanel extends JPanel {
 
             // Curve with Pin shift
             if (random.nextInt(2) == 0) {
-                double horizontalCurve = (random.nextDouble() - 0.5) * 5;
+                double horizontalCurve = (random.nextDouble() - 0.5) * 3;
                 int horizontalPinShift = random.nextInt((maxPinShift * 2) + 1) - maxPinShift;
                 clone.curveHorizontal(horizontalCurve, horizontalPinShift);
             } else {
-                double verticalCurve = (random.nextDouble() - 0.5) * 5;
+                double verticalCurve = (random.nextDouble() - 0.5) * 3;
                 int verticalPinShift = random.nextInt((maxPinShift * 2) + 1) - maxPinShift;
                 clone.curveVertical(verticalCurve, verticalPinShift);
             }

@@ -13,4 +13,12 @@ public class Diagnostics {
         }
     }
 
+    public static void printMatrix (Matrix matrix) {
+        for (int row = 0; row < matrix.getHeight(); row++) {
+            for (int col = 0; col < matrix.getWidth(); col++) {
+                System.out.println("Matrix[" + row + "][" + col + "] = " + matrix.get(row, col));
+            }
+        }
+    }
+
 }

@@ -84,17 +84,17 @@ public class Image implements Cloneable {
         }
     }
 
-    public double[][] pixelsToVector () {
+    public Matrix pixelsToVector () {
 
-        double[][] vector = new double[1][(height * width) + 1];
+        Matrix vector = new Matrix(1, (height * width) + 1);
 
         for (int row = 0; row < height; row++) {
             for (int col = 0; col < width; col++) {
-                vector[0][(row * width) + col] = pixels[row][col];
+                vector.set(0, (row * width) + col, pixels[row][col]);
             }
         }
 
-        vector[0][vector.length - 1] = -1;
+        vector.set(0, vector.getHeight() - 1, -1);
 
         return vector;
     }

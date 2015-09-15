@@ -33,13 +33,13 @@ public class ControlPanel extends JPanel {
     private JButton saveData;
 
     private int trainIter = 1000;
-    private int batchSize = 1000;
-    private double lR = 0.001;
+    private int batchSize = 14000;
+    private double lR = 0.0001;
     private double beta = 1.0;
 
     private int inputNodesNo = 785;
-    private int hiddenNeuronNo = 15;
-    private int outputNeuronNo = 12;
+    private int hiddenNeuronNo = 20;
+    private int outputNeuronNo = 14;
 
     public static ControlPanel getInstance() {
         if (instance == null) instance = new ControlPanel();
@@ -213,19 +213,21 @@ public class ControlPanel extends JPanel {
                 // LOAD DATA FROM DATA LOADER
                 System.out.println("LOADING INPUT BATCH...");
                 try {
-                    final Batch batch = DataLoader.getInputBatch(batchSize, trainingSource.getText());
+                    final MatrixBatch batch = DataLoader.getMatrixInputBatch(batchSize, trainingSource.getText());
 
-                    System.out.println("INSTANTIATING DEEPNET...");
-                    final DeepNet deepNet = DeepNet.getInstance(inputNodesNo, hiddenNeuronNo, outputNeuronNo);
+                    System.out.println("INSTANTIATING FNN...");
+                    final FNN2Layer fnn2Layer = FNN2Layer.getInstance(inputNodesNo, hiddenNeuronNo, outputNeuronNo);
 
-                    System.out.println("TRAINING DEEPNET...");
-                    double error = deepNet.trainNet(batch.getInputs(), batch.getTargets(), lR, beta, trainIter);
+                    System.out.println("TRAINING FNN...");
+                    double error = fnn2Layer.trainNet(batch.getInputs(), batch.getTargets(), lR, beta, trainIter);
                     System.out.println();
                     System.out.println();
-                    System.out.println("DEEPNET TRAINED. ERROR: " + Double.toString((error / (batchSize * 10)) * 100) + " %");
+                    System.out.println("FNN TRAINED. ERROR: " + Double.toString((error / (batchSize * 10)) * 100) + " %");
 
                     progress.setText("Net trained.");
                 } catch (IOException exception) {
+                    JOptionPane.showMessageDialog(null, exception.getMessage());
+                } catch (MatrixDimensionMismatchException exception) {
                     JOptionPane.showMessageDialog(null, exception.getMessage());
                 }
             }
@@ -247,12 +249,12 @@ public class ControlPanel extends JPanel {
                     // WRITE METADATA
                     bufferedWriter.write(inputNodesNo + "," + hiddenNeuronNo + "," + outputNeuronNo + "\n");
 
-                    DeepNet deepNet = DeepNet.getInstance(inputNodesNo, hiddenNeuronNo, outputNeuronNo);
+                    FNN2Layer fnn2Layer = FNN2Layer.getInstance(inputNodesNo, hiddenNeuronNo, outputNeuronNo);
 
                     // WRITE WEIGHTS1
                     for (int inputNode = 0; inputNode < inputNodesNo; inputNode++) {
                         for (int hiddenNeuron = 0; hiddenNeuron < hiddenNeuronNo; hiddenNeuron++) {
-                            bufferedWriter.write(Double.toString(deepNet.getWeight1(inputNode, hiddenNeuron)) + ",");
+                            bufferedWriter.write(Double.toString(fnn2Layer.getWeight1(inputNode, hiddenNeuron)) + ",");
                         }
                     }
                     bufferedWriter.write("\n");
@@ -260,7 +262,7 @@ public class ControlPanel extends JPanel {
                     // WRITE WEIGHTS2
                     for (int hiddenNeuron = 0; hiddenNeuron < hiddenNeuronNo + 1; hiddenNeuron++) {
                         for (int outputNeuron = 0; outputNeuron < outputNeuronNo; outputNeuron++) {
-                            bufferedWriter.write(Double.toString(deepNet.getWeight2(hiddenNeuron, outputNeuron)) + ",");
+                            bufferedWriter.write(Double.toString(fnn2Layer.getWeight2(hiddenNeuron, outputNeuron)) + ",");
                         }
                     }
                     bufferedWriter.close();
@@ -306,8 +308,9 @@ public class ControlPanel extends JPanel {
                     boolean targetValid = false;
 
                     String target = JOptionPane.showInputDialog("Is this the right character?", predictedTarget);
+
                     // Check target is an appropriate character
-                    if (target != null && Pattern.matches("[0-9+-]", target)) {
+                    if (target != null && Pattern.matches("[0-9+-dx]", target)) {
 
                         BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(artificialDataSource.getText(), true));
                         ArtificialDataPanel artificialDataPanel = ArtificialDataPanel.getInstance();
@@ -362,7 +365,7 @@ public class ControlPanel extends JPanel {
 
             if (iNN == inputNodesNo && hNN == hiddenNeuronNo && oNN == outputNeuronNo) {
 
-                DeepNet deepNet = DeepNet.getInstance(inputNodesNo, hiddenNeuronNo, outputNeuronNo);
+                FNN2Layer fnn2Layer = FNN2Layer.getInstance(inputNodesNo, hiddenNeuronNo, outputNeuronNo);
 
                 // READ WEIGHTS1
                 String weights1String = bufferedReader.readLine();
@@ -370,7 +373,7 @@ public class ControlPanel extends JPanel {
                 for (int inputNode = 0; inputNode < inputNodesNo; inputNode++) {
                     for (int hiddenNeuron = 0; hiddenNeuron < hiddenNeuronNo; hiddenNeuron++) {
                         try {
-                            deepNet.setWeight1(inputNode, hiddenNeuron, Double.parseDouble(weights1[(inputNode * hiddenNeuronNo) + hiddenNeuron]));
+                            fnn2Layer.setWeight1(inputNode, hiddenNeuron, Double.parseDouble(weights1[(inputNode * hiddenNeuronNo) + hiddenNeuron]));
                         } catch (ArrayIndexOutOfBoundsException exception) {
                             System.out.println(inputNode + ", " + hiddenNeuron);
                         }
@@ -383,7 +386,7 @@ public class ControlPanel extends JPanel {
                 for (int hiddenNeuron = 0; hiddenNeuron < hiddenNeuronNo + 1; hiddenNeuron++) {
                     for (int outputNeuron = 0; outputNeuron < outputNeuronNo; outputNeuron++) {
                         try {
-                            deepNet.setWeight2(hiddenNeuron, outputNeuron, Double.parseDouble(weights2[(hiddenNeuron * outputNeuronNo) + outputNeuron]));
+                            fnn2Layer.setWeight2(hiddenNeuron, outputNeuron, Double.parseDouble(weights2[(hiddenNeuron * outputNeuronNo) + outputNeuron]));
                         } catch (ArrayIndexOutOfBoundsException exception) {
                             System.out.println(hiddenNeuron + ", " + outputNeuron);
                         }
@@ -407,28 +410,37 @@ public class ControlPanel extends JPanel {
     public String classify () {
         DrawingPanel drawingPanel = DrawingPanel.getInstance();
         Image currentImage = drawingPanel.getImage();
-        double[][] input = currentImage.pixelsToVector();
-        double[][] output;
+        Matrix input = currentImage.pixelsToVector();
+        Matrix output;
 
-        DeepNet deepNet = DeepNet.getInstance(inputNodesNo, hiddenNeuronNo, outputNeuronNo);
+        FNN2Layer fnn2Layer = FNN2Layer.getInstance(inputNodesNo, hiddenNeuronNo, outputNeuronNo);
 
-        output = deepNet.useNet(input, 1.0);
-        output = deepNet.rectifyActivations(output);
+        try {
+            output = fnn2Layer.useNet(input, 1.0);
+            output = fnn2Layer.rectifyActivations(output);
 
-        String target = "0";
-        for (int i = 0; i < output[0].length; i++) {
-            if (output[0][i] == 1) {
-                if (i < 10) {
-                    target = Integer.toString(i);
-                } else if (i == 10) {
-                    target = "+";
-                } else {
-                    target = "-";
+            String target = "0";
+            for (int i = 0; i < output.getWidth(); i++) {
+                if (output.get(0, i) == 1) {
+                    if (i < 10) {
+                        target = Integer.toString(i);
+                    } else if (i == 10) {
+                        target = "+";
+                    } else if (i == 11) {
+                        target = "-";
+                    } else if (i == 12) {
+                        target = "x";
+                    } else {
+                        target = "÷";
+                    }
+                    result.setText("Result: " + target);
                 }
-                result.setText("Result: " + target);
             }
+            return target;
+        } catch (MatrixDimensionMismatchException e) {
+            JOptionPane.showMessageDialog(null, e.getMessage());
         }
-        return target;
+        return "";
     }
 }
 

@@ -8,7 +8,6 @@ import org.apache.commons.math3.linear.RealMatrix;
 public class DeepNet {
 
 	private static DeepNet instance = null;
-	private static ControlPanel controlPanel;
 
 	private DeepNet () {}
 
@@ -23,8 +22,6 @@ public class DeepNet {
 			weights2 = new double[hiddenNeuronNo+1][outputNeuronNo];
 
 			initWeights();
-
-			controlPanel = ControlPanel.getInstance();
 		}
 
 		return instance;
@@ -63,7 +60,7 @@ public class DeepNet {
 	//INITIALISE THE WEIGHT ARRAYS
 	public static void initWeights() {
 		fillRandom(weights1, inputNodesNo);
-		fillRandom(weights2, hiddenNeuronNo);	
+		fillRandom(weights2, hiddenNeuronNo);
 	}
 	
 	//SET THE GREATEST ACTIVATION TO 1 AND ALL OTHERS TO 0
