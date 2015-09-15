@@ -1,10 +1,14 @@
 package com.devankuleindiren.mnist;
 
+import javax.swing.*;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+
 /**
  * Created by Devan Kuleindiren on 29/08/15.
  */
 
-public class FNN2Layer {
+public class FNN2Layer extends SwingWorker <Double, Void> {
 
     private static FNN2Layer instance = null;
 
@@ -60,10 +64,6 @@ public class FNN2Layer {
     public static void initWeights() {
         fillRandom(weights1, inputNodesNo);
         fillRandom(weights2, hiddenNeuronNo);
-
-        Diagnostics.printMatrix(weights1);
-        System.out.println();
-        Diagnostics.printMatrix(weights2);
     }
 
     //SET THE GREATEST ACTIVATION TO 1 AND ALL OTHERS TO 0
@@ -85,60 +85,104 @@ public class FNN2Layer {
         return activations;
     }
 
-    //TRAIN THE NET USING GIVEN INPUTS & TARGETS, WITH A GIVEN LEARNING RATE, BETA VALUE AND NUMBER OF ITERATIONS
-    public double trainNet(Matrix inputVectors, Matrix targets, double lR, double beta, int iterationNo) throws MatrixDimensionMismatchException {
+    @Override
+    public Double doInBackground () {
 
         Matrix hiddenActs;
         Matrix outputActs;
-        double error = 0;
+        error = 0.0;
 
         //ERROR TERMS FOR CHANGE IN OUTPUT WEIGHTS
         Matrix deltaO = new Matrix (inputVectors.getHeight(), outputNeuronNo);
         //ERROR TERMS FOR CHANGE IN HIDDEN WEIGHTS
         Matrix deltaH = new Matrix (inputVectors.getHeight(), hiddenNeuronNo);
 
-        System.out.println("***");
-        for (int i = 0; i < iterationNo; i++) {
+        try {
+            System.out.println("***");
+            for (int i = 0; i < iterationNo; i++) {
 
-            //FEED FORWARD
-            hiddenActs = useNetP1(inputVectors, beta);
-            outputActs = useNetP2(hiddenActs, beta);
+                //FEED FORWARD
+                hiddenActs = useNetP1(inputVectors, beta);
+                outputActs = useNetP2(hiddenActs, beta);
 
-            error = 0;
+                error = 0.0;
 
-            for (int j = 0; j < inputVectors.getHeight(); j++) {
-                for (int k = 0; k < outputNeuronNo; k++) {
-                    //COMPUTE ERROR
-                    error += Math.pow((outputActs.get(j, k) - targets.get(j, k)), 2);
+                for (int j = 0; j < inputVectors.getHeight(); j++) {
+                    for (int k = 0; k < outputNeuronNo; k++) {
+                        //COMPUTE ERROR
+                        error += Math.pow((outputActs.get(j, k) - targets.get(j, k)), 2);
 
-                    //COMPUTE ERROR IN THE OUTPUT NEURONS (LOGISTIC)
-                    deltaO.set(j, k, (targets.get(j, k) - outputActs.get(j, k)) * outputActs.get(j, k) * (1 - outputActs.get(j, k)));
-                }
-            }
-
-            if ((i-1) % 100 == 0) {
-                System.out.println("% Error: " + (error / (inputVectors.getHeight() * outputNeuronNo)) * 100);
-            }
-
-            //COMPUTE ERROR IN THE HIDDEN NEURONS
-            for (int j = 0; j < inputVectors.getHeight(); j++) {
-                for (int k = 0; k < hiddenNeuronNo; k++) {
-
-                    double tempWeightErrorSum = 0;
-                    for (int l = 0; l < outputNeuronNo; l++) {
-                        tempWeightErrorSum += weights2.get(k, l) * deltaO.get(j, l);
+                        //COMPUTE ERROR IN THE OUTPUT NEURONS (LOGISTIC)
+                        deltaO.set(j, k, (targets.get(j, k) - outputActs.get(j, k)) * outputActs.get(j, k) * (1 - outputActs.get(j, k)));
                     }
+                }
 
-                    deltaH.set(j, k, hiddenActs.get(j, k) * (1 - hiddenActs.get(j, k)) * tempWeightErrorSum);
+                if ((i-1) % 100 == 0) {
+                    System.out.println("% Error: " + (error / (inputVectors.getHeight() * outputNeuronNo)) * 100);
+                }
+
+                //COMPUTE ERROR IN THE HIDDEN NEURONS
+                for (int j = 0; j < inputVectors.getHeight(); j++) {
+                    for (int k = 0; k < hiddenNeuronNo; k++) {
+
+                        double tempWeightErrorSum = 0;
+                        for (int l = 0; l < outputNeuronNo; l++) {
+                            tempWeightErrorSum += weights2.get(k, l) * deltaO.get(j, l);
+                        }
+
+                        deltaH.set(j, k, hiddenActs.get(j, k) * (1 - hiddenActs.get(j, k)) * tempWeightErrorSum);
+                    }
+                }
+
+                //UPDATE WEIGHTS2
+                weights2 = weights2.add((hiddenActs.transpose().multiply(deltaO)).scalarMultiply(lR));
+
+                //UPDATE WEIGHTS1
+                weights1 = weights1.add((inputVectors.transpose().multiply(deltaH)).scalarMultiply(lR));
+
+                setProgress(100 * i / iterationNo);
+            }
+        } catch (MatrixDimensionMismatchException e) {
+            JOptionPane.showMessageDialog(null, e.getMessage());
+        }
+
+        return error;
+    }
+
+    @Override
+    public void done () {
+        ControlPanel controlPanel = ControlPanel.getInstance();
+        controlPanel.updateTrainingProgressBar(100, Strings.CONTROLPANEL_NEURALNETWORK_TRAININGCOMPLETE);
+    }
+
+    private Matrix inputVectors;
+    private Matrix targets;
+    private double lR;
+    private double beta;
+    private int iterationNo;
+    private Double error;
+
+    //TRAIN THE NET USING GIVEN INPUTS & TARGETS, WITH A GIVEN LEARNING RATE, BETA VALUE AND NUMBER OF ITERATIONS
+    public double trainNet(Matrix inputVectors, Matrix targets, double lR, double beta, int iterationNo) throws MatrixDimensionMismatchException {
+        this.inputVectors = inputVectors;
+        this.targets = targets;
+        this.lR = lR;
+        this.beta = beta;
+        this.iterationNo = iterationNo;
+        this.error = 0.0;
+
+        final ControlPanel controlPanel = ControlPanel.getInstance();
+        controlPanel.updateTrainingProgressBar(0, Strings.CONTROLPANEL_NEURALNETWORK_TRAININGINPROGRESS);
+
+        this.addPropertyChangeListener(new PropertyChangeListener() {
+            public  void propertyChange(PropertyChangeEvent evt) {
+                if ("progress".equals(evt.getPropertyName())) {
+                    controlPanel.updateTrainingProgressBar((Integer)evt.getNewValue(), Strings.CONTROLPANEL_NEURALNETWORK_TRAININGINPROGRESS);
                 }
             }
+        });
 
-            //UPDATE WEIGHTS2
-            weights2 = weights2.add((hiddenActs.transpose().multiply(deltaO)).scalarMultiply(lR));
-
-            //UPDATE WEIGHTS1
-            weights1 = weights1.add((inputVectors.transpose().multiply(deltaH)).scalarMultiply(lR));
-        }
+        this.execute();
 
         return error;
     }

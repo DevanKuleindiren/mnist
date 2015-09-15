@@ -18,9 +18,10 @@ public class ControlPanel extends JPanel {
 
     private JTextField trainingSource;
     private JButton train;
-    private JLabel progress;
     private JButton classify;
     private JLabel result;
+    private JLabel trainingProgressLabel;
+    private JProgressBar trainingProgressBar;
 
     private JTextField weightsSource;
     private JButton saveWeights;
@@ -53,35 +54,37 @@ public class ControlPanel extends JPanel {
         // SECTIONS OF THE CONTROL PANEL
 
         final JPanel loadImage = new JPanel();
-        addBorder(loadImage, "Load Image");
+        addBorder(loadImage, Strings.CONTROLPANEL_PANEL_LOADIMAGE);
 
         JPanel training = new JPanel();
-        addBorder(training, "Training");
+        addBorder(training, Strings.CONTROLPANEL_PANEL_TRAINING);
 
         final JPanel saveLoad = new JPanel();
-        addBorder(saveLoad, "File");
+        addBorder(saveLoad, Strings.CONTROLPANEL_PANEL_FILE);
 
         JPanel drawing = new JPanel();
-        addBorder(drawing, "Drawing");
+        addBorder(drawing, Strings.CONTROLPANEL_PANEL_DRAWING);
 
         final JPanel artificialData = new JPanel();
-        addBorder(artificialData, "Artificial Data");
+        addBorder(artificialData, Strings.CONTROLPANEL_PANEL_ARTIFICIALDATA);
 
-        loadImageSource = new JTextField("mnist_test.csv");
-        nextImage = new JButton("Next image");
+        loadImageSource = new JTextField(Strings.CONTROLPANEL_SOURCES_TESTING);
+        nextImage = new JButton(Strings.CONTROLPANEL_BUTTONS_NEXT);
         label = new JLabel("-");
-        trainingSource = new JTextField("mnist_train.csv");
-        train = new JButton("Train");
-        progress = new JLabel("");
-        classify = new JButton("Classify");
+        trainingSource = new JTextField(Strings.CONTROLPANEL_SOURCES_TRAINING);
+        train = new JButton(Strings.CONTROLPANEL_BUTTONS_TRAIN);
+        classify = new JButton(Strings.CONTROLPANEL_BUTTONS_CLASSIFY);
         result = new JLabel("-");
-        weightsSource = new JTextField("weights.txt");
-        saveWeights = new JButton("Save weights");
-        load = new JButton("Load weights");
-        erase = new JButton("Erase");
-        artificialDataSource = new JTextField("artificialData.txt");
-        generate = new JButton("Generate");
-        saveData = new JButton("Save");
+        trainingProgressLabel = new JLabel("");
+        trainingProgressBar = new JProgressBar(0, 100);
+        trainingProgressBar.setStringPainted(true);
+        weightsSource = new JTextField(Strings.CONTROLPANEL_SOURCES_WEIGHTS);
+        saveWeights = new JButton(Strings.CONTROLPANEL_BUTTONS_SAVEWEIGHTS);
+        load = new JButton(Strings.CONTROLPANEL_BUTTONS_LOADWEIGHTS);
+        erase = new JButton(Strings.CONTROLPANEL_BUTTONS_ERASE);
+        artificialDataSource = new JTextField(Strings.CONTROLPANEL_SOURCES_ARTIFICIALDATA);
+        generate = new JButton(Strings.CONTROLPANEL_BUTTONS_GENERATE);
+        saveData = new JButton(Strings.CONTROLPANEL_BUTTONS_SAVEARTIFICIALDATA);
 
         GroupLayout layout = new GroupLayout(loadImage);
         loadImage.setLayout(layout);
@@ -106,18 +109,20 @@ public class ControlPanel extends JPanel {
                         .addGroup(layout2.createParallelGroup(GroupLayout.Alignment.LEADING)
                                         .addComponent(trainingSource)
                                         .addComponent(train)
-                                        .addComponent(progress)
                                         .addComponent(classify)
                                         .addComponent(result)
+                                        .addComponent(trainingProgressLabel)
+                                        .addComponent(trainingProgressBar)
                         )
         );
         layout2.setVerticalGroup(
                 layout2.createSequentialGroup()
                         .addComponent(trainingSource)
                         .addComponent(train)
-                        .addComponent(progress)
                         .addComponent(classify)
                         .addComponent(result)
+                        .addComponent(trainingProgressLabel)
+                        .addComponent(trainingProgressBar)
         );
 
         GroupLayout layout3 = new GroupLayout(saveLoad);
@@ -208,7 +213,6 @@ public class ControlPanel extends JPanel {
         train.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                progress.setText("Training...");
 
                 // LOAD DATA FROM DATA LOADER
                 System.out.println("LOADING INPUT BATCH...");
@@ -224,7 +228,6 @@ public class ControlPanel extends JPanel {
                     System.out.println();
                     System.out.println("FNN TRAINED. ERROR: " + Double.toString((error / (batchSize * 10)) * 100) + " %");
 
-                    progress.setText("Net trained.");
                 } catch (IOException exception) {
                     JOptionPane.showMessageDialog(null, exception.getMessage());
                 } catch (MatrixDimensionMismatchException exception) {
@@ -343,6 +346,20 @@ public class ControlPanel extends JPanel {
     public void updateLabel(String label) {
         if (this.label != null) {
             this.label.setText("Digit: " + label);
+        }
+    }
+
+    public void updateTrainingProgressBar(int progress, String status) {
+        trainingProgressBar.setValue(progress);
+        trainingProgressBar.setString(progress + "%");
+        trainingProgressLabel.setText(status);
+
+        if (status.equals(Strings.CONTROLPANEL_NEURALNETWORK_TRAININGINPROGRESS)) {
+            train.setEnabled(false);
+            classify.setEnabled(false);
+        } else if (status.equals(Strings.CONTROLPANEL_NEURALNETWORK_TRAININGCOMPLETE)) {
+            train.setEnabled(true);
+            classify.setEnabled(true);
         }
     }
 
