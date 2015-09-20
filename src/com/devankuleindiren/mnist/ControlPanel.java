@@ -12,6 +12,8 @@ public class ControlPanel extends JPanel {
 
     private static ControlPanel instance = null;
 
+    private static FNN2Layer neuralNetwork;
+
     private JTextField loadImageSource;
     private JButton nextImage;
     private JLabel label;
@@ -51,6 +53,9 @@ public class ControlPanel extends JPanel {
 
     private ControlPanel() {
         super();
+
+        // GET INSTANCE OF NEURAL NETWORK
+        neuralNetwork = FNN2Layer.getInstance(inputNodesNo, hiddenNeuronNo, outputNeuronNo);
 
         // SECTIONS OF THE CONTROL PANEL
 
@@ -230,11 +235,8 @@ public class ControlPanel extends JPanel {
 
                     final MatrixBatch batch = DataLoader.getMatrixInputBatch(batchSize, trainingSource.getText());
 
-                    System.out.println("INSTANTIATING FNN...");
-                    final FNN2Layer fnn2Layer = FNN2Layer.getInstance(inputNodesNo, hiddenNeuronNo, outputNeuronNo);
-
                     System.out.println("TRAINING FNN...");
-                    double error = fnn2Layer.trainNet(batch.getInputs(), batch.getTargets(), lR, beta, trainIter);
+                    double error = neuralNetwork.trainNet(batch.getInputs(), batch.getTargets(), lR, beta, trainIter);
                     System.out.println();
                     System.out.println();
                     System.out.println("FNN TRAINED. ERROR: " + Double.toString((error / (batchSize * 10)) * 100) + " %");
@@ -258,30 +260,7 @@ public class ControlPanel extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(weightsSource.getText(), false));
-
-                    // WRITE METADATA
-                    bufferedWriter.write(inputNodesNo + "," + hiddenNeuronNo + "," + outputNeuronNo + "\n");
-
-                    FNN2Layer fnn2Layer = FNN2Layer.getInstance(inputNodesNo, hiddenNeuronNo, outputNeuronNo);
-
-                    // WRITE WEIGHTS1
-                    for (int inputNode = 0; inputNode < inputNodesNo; inputNode++) {
-                        for (int hiddenNeuron = 0; hiddenNeuron < hiddenNeuronNo; hiddenNeuron++) {
-                            bufferedWriter.write(Double.toString(fnn2Layer.getWeight1(inputNode, hiddenNeuron)) + ",");
-                        }
-                    }
-                    bufferedWriter.write("\n");
-
-                    // WRITE WEIGHTS2
-                    for (int hiddenNeuron = 0; hiddenNeuron < hiddenNeuronNo + 1; hiddenNeuron++) {
-                        for (int outputNeuron = 0; outputNeuron < outputNeuronNo; outputNeuron++) {
-                            bufferedWriter.write(Double.toString(fnn2Layer.getWeight2(hiddenNeuron, outputNeuron)) + ",");
-                        }
-                    }
-                    bufferedWriter.close();
-                    JOptionPane.showMessageDialog(null, "Saved weights to " + weightsSource.getText());
-
+                    neuralNetwork.saveWeights(weightsSource.getText());
                 } catch (FileNotFoundException exception) {
                     JOptionPane.showMessageDialog(null, weightsSource.getText() + " could not be found.");
                 } catch (IOException exception) {
@@ -382,50 +361,7 @@ public class ControlPanel extends JPanel {
 
     public void loadWeights () {
         try {
-            BufferedReader bufferedReader = new BufferedReader(new FileReader(weightsSource.getText()));
-
-            String metadataLine = bufferedReader.readLine();
-            String[] metadata = metadataLine.split(",");
-
-            int iNN = Integer.parseInt(metadata[0]);
-            int hNN = Integer.parseInt(metadata[1]);
-            int oNN = Integer.parseInt(metadata[2]);
-
-            if (iNN == inputNodesNo && hNN == hiddenNeuronNo && oNN == outputNeuronNo) {
-
-                FNN2Layer fnn2Layer = FNN2Layer.getInstance(inputNodesNo, hiddenNeuronNo, outputNeuronNo);
-
-                // READ WEIGHTS1
-                String weights1String = bufferedReader.readLine();
-                String[] weights1 = weights1String.split(",");
-                for (int inputNode = 0; inputNode < inputNodesNo; inputNode++) {
-                    for (int hiddenNeuron = 0; hiddenNeuron < hiddenNeuronNo; hiddenNeuron++) {
-                        try {
-                            fnn2Layer.setWeight1(inputNode, hiddenNeuron, Double.parseDouble(weights1[(inputNode * hiddenNeuronNo) + hiddenNeuron]));
-                        } catch (ArrayIndexOutOfBoundsException exception) {
-                            System.out.println(inputNode + ", " + hiddenNeuron);
-                        }
-                    }
-                }
-
-                // READ WEIGHTS2
-                String weights2String = bufferedReader.readLine();
-                String[] weights2 = weights2String.split(",");
-                for (int hiddenNeuron = 0; hiddenNeuron < hiddenNeuronNo + 1; hiddenNeuron++) {
-                    for (int outputNeuron = 0; outputNeuron < outputNeuronNo; outputNeuron++) {
-                        try {
-                            fnn2Layer.setWeight2(hiddenNeuron, outputNeuron, Double.parseDouble(weights2[(hiddenNeuron * outputNeuronNo) + outputNeuron]));
-                        } catch (ArrayIndexOutOfBoundsException exception) {
-                            System.out.println(hiddenNeuron + ", " + outputNeuron);
-                        }
-                    }
-                }
-
-                bufferedReader.close();
-                JOptionPane.showMessageDialog(null, "Loaded weights from " + weightsSource.getText());
-
-            } else throw new InvalidWeightFormatException("The network of weights in the file is invalid.");
-
+            neuralNetwork.loadWeights(weightsSource.getText());
         } catch (FileNotFoundException exception) {
             JOptionPane.showMessageDialog(null, weightsSource.getText() + " could not be found.");
         } catch (IOException exception) {
@@ -441,11 +377,9 @@ public class ControlPanel extends JPanel {
         Matrix input = currentImage.pixelsToVector();
         Matrix output;
 
-        FNN2Layer fnn2Layer = FNN2Layer.getInstance(inputNodesNo, hiddenNeuronNo, outputNeuronNo);
-
         try {
-            output = fnn2Layer.useNet(input, 1.0);
-            output = fnn2Layer.rectifyActivations(output);
+            output = neuralNetwork.useNet(input, 1.0);
+            output = neuralNetwork.rectifyActivations(output);
 
             String target = "0";
             for (int i = 0; i < output.getWidth(); i++) {

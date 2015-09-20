@@ -3,6 +3,7 @@ package com.devankuleindiren.mnist;
 import javax.swing.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.*;
 
 /**
  * Created by Devan Kuleindiren on 29/08/15.
@@ -239,5 +240,75 @@ public class FNN2Layer extends SwingWorker <Double, Void> {
         }
 
         return outputActs;
+    }
+
+    // LOAD WEIGHTS FROM GIVEN SOURCE FILE
+    public void loadWeights (String source) throws FileNotFoundException, IOException, InvalidWeightFormatException {
+        BufferedReader bufferedReader = new BufferedReader(new FileReader(source));
+
+        String metadataLine = bufferedReader.readLine();
+        String[] metadata = metadataLine.split(",");
+
+        int iNN = Integer.parseInt(metadata[0]);
+        int hNN = Integer.parseInt(metadata[1]);
+        int oNN = Integer.parseInt(metadata[2]);
+
+        if (iNN == inputNodesNo && hNN == hiddenNeuronNo && oNN == outputNeuronNo) {
+
+            // READ WEIGHTS1
+            String weights1String = bufferedReader.readLine();
+            String[] weights1Array = weights1String.split(",");
+            for (int inputNode = 0; inputNode < inputNodesNo; inputNode++) {
+                for (int hiddenNeuron = 0; hiddenNeuron < hiddenNeuronNo; hiddenNeuron++) {
+                    try {
+                        weights1.set(inputNode, hiddenNeuron, Double.parseDouble(weights1Array[(inputNode * hiddenNeuronNo) + hiddenNeuron]));
+                    } catch (ArrayIndexOutOfBoundsException exception) {
+                        System.out.println(inputNode + ", " + hiddenNeuron);
+                    }
+                }
+            }
+
+            // READ WEIGHTS2
+            String weights2String = bufferedReader.readLine();
+            String[] weights2Array = weights2String.split(",");
+            for (int hiddenNeuron = 0; hiddenNeuron < hiddenNeuronNo + 1; hiddenNeuron++) {
+                for (int outputNeuron = 0; outputNeuron < outputNeuronNo; outputNeuron++) {
+                    try {
+                        weights2.set(hiddenNeuron, outputNeuron, Double.parseDouble(weights2Array[(hiddenNeuron * outputNeuronNo) + outputNeuron]));
+                    } catch (ArrayIndexOutOfBoundsException exception) {
+                        System.out.println(hiddenNeuron + ", " + outputNeuron);
+                    }
+                }
+            }
+
+            bufferedReader.close();
+            JOptionPane.showMessageDialog(null, "Loaded weights from " + source);
+
+        } else throw new InvalidWeightFormatException("The network of weights in the file is invalid.");
+    }
+
+    // SAVE WEIGHTS TO GIVEN DESTINATION FILE
+    public void saveWeights (String destination) throws FileNotFoundException, IOException {
+        BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(destination, false));
+
+        // WRITE METADATA
+        bufferedWriter.write(inputNodesNo + "," + hiddenNeuronNo + "," + outputNeuronNo + "\n");
+
+        // WRITE WEIGHTS1
+        for (int inputNode = 0; inputNode < inputNodesNo; inputNode++) {
+            for (int hiddenNeuron = 0; hiddenNeuron < hiddenNeuronNo; hiddenNeuron++) {
+                bufferedWriter.write(Double.toString(weights1.get(inputNode, hiddenNeuron)) + ",");
+            }
+        }
+        bufferedWriter.write("\n");
+
+        // WRITE WEIGHTS2
+        for (int hiddenNeuron = 0; hiddenNeuron < hiddenNeuronNo + 1; hiddenNeuron++) {
+            for (int outputNeuron = 0; outputNeuron < outputNeuronNo; outputNeuron++) {
+                bufferedWriter.write(Double.toString(weights2.get(hiddenNeuron, outputNeuron)) + ",");
+            }
+        }
+        bufferedWriter.close();
+        JOptionPane.showMessageDialog(null, "Saved weights to " + destination);
     }
 }
