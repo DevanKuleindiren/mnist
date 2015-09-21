@@ -18,10 +18,6 @@ public class SnapShot extends JPanel {
         repaint();
     }
 
-    public void update() {
-        repaint();
-    }
-
     public Dimension getPreferredSize() {
         return new Dimension(image.getWidth() * zoom, image.getHeight() * zoom);
     }

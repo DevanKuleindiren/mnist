@@ -9,7 +9,7 @@ import javax.swing.border.EtchedBorder;
 public class Main extends JFrame {
 
     private DataLoader dataLoader;
-    private DrawingPanel DrawingPanel;
+    private DrawingPanel drawingPanel;
     private ControlPanel controlPanel;
     private ArtificialDataPanel artificialDataPanel;
 
@@ -39,7 +39,7 @@ public class Main extends JFrame {
 
         final DrawingPanel result = DrawingPanel.getInstance();
         holder.add(result);
-        this.DrawingPanel = result;
+        this.drawingPanel = result;
         return new JScrollPane(holder);
     }
 
@@ -80,7 +80,7 @@ public class Main extends JFrame {
         if (image == null) {
             image = new Image(28, 28);
         }
-        DrawingPanel.display(image);
+        drawingPanel.display(image);
         repaint();
     }
 

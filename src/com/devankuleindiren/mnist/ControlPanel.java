@@ -39,7 +39,6 @@ public class ControlPanel extends JPanel {
 
     private int trainIter = 1000;
     private double lR = 0.0001;
-    private double beta = 1.0;
 
     private int inputNodesNo = 785;
     private int hiddenNeuronNo = 20;
@@ -55,7 +54,7 @@ public class ControlPanel extends JPanel {
         super();
 
         // GET INSTANCE OF NEURAL NETWORK
-        neuralNetwork = FNN2Layer.getInstance(inputNodesNo, hiddenNeuronNo, outputNeuronNo);
+        neuralNetwork = new FNN2Layer (inputNodesNo, hiddenNeuronNo, outputNeuronNo);
 
         // SECTIONS OF THE CONTROL PANEL
 
@@ -236,7 +235,7 @@ public class ControlPanel extends JPanel {
                     final MatrixBatch batch = DataLoader.getMatrixInputBatch(batchSize, trainingSource.getText());
 
                     System.out.println("TRAINING FNN...");
-                    double error = neuralNetwork.trainNet(batch.getInputs(), batch.getTargets(), lR, beta, trainIter);
+                    double error = neuralNetwork.train (batch.getInputs(), batch.getTargets(), lR, trainIter);
                     System.out.println();
                     System.out.println();
                     System.out.println("FNN TRAINED. ERROR: " + Double.toString((error / (batchSize * 10)) * 100) + " %");
@@ -378,7 +377,7 @@ public class ControlPanel extends JPanel {
         Matrix output;
 
         try {
-            output = neuralNetwork.useNet(input, 1.0);
+            output = neuralNetwork.feedForward(input);
             output = neuralNetwork.rectifyActivations(output);
 
             String target = "0";

@@ -23,47 +23,6 @@ public class DataLoader {
         return instance;
     }
 
-    public static Batch getInputBatch (int batchSize, String fileName) throws IOException {
-
-        double[][] inputs = new double[batchSize][785];
-        double[][] targets = new double[batchSize][14];
-
-        try {
-            BufferedReader reader = new BufferedReader(new FileReader(fileName));
-
-            for (int i = 0; i < batchSize; i++) {
-                String temp = reader.readLine();
-                String[] values = temp.split(",");
-
-                for (int j = 1; j < values.length; j++) inputs[i][j - 1] = (Double.parseDouble(values[j]) / 255.0);
-                inputs[i][784] = -1;
-
-                int target;
-                if (values[0].equals("+")) {
-                    target = 10;
-                } else if (values[0].equals("-")) {
-                    target = 11;
-                } else if (values[0].equals("x")) {
-                    target = 12;
-                } else if (values[0].equals("d")) {
-                    target = 13;
-                } else {
-                    target = Integer.parseInt(values[0]);
-                }
-                targets[i][target] = 1;
-            }
-
-            return new Batch(inputs, targets);
-
-        } catch (FileNotFoundException e) {
-            throw new IOException(fileName + " cannot be found.");
-        } catch (EOFException e) {
-            throw new IOException("Reached end of file: " + fileName + ". Requested input batch too large.");
-        } catch (IOException e) {
-            throw new IOException("Error reading batch from: " + fileName);
-        }
-    }
-
     public static MatrixBatch getMatrixInputBatch (int batchSize, String fileName) throws IOException {
 
         Matrix inputs = new Matrix(batchSize, 785);

@@ -13,14 +13,6 @@ public class MatrixBatch {
         this.targets = targets;
     }
 
-    public void setInputs (Matrix inputs) {
-        this.inputs = inputs;
-    }
-
-    public void setTargets (Matrix targets) {
-        this.targets = targets;
-    }
-
     public Matrix getInputs() {
         return inputs;
     }
