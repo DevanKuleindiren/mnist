@@ -22,6 +22,18 @@ public class Image implements Cloneable {
         this.label = label;
     }
 
+    public Image (Matrix matrix, String label) {
+        this.pixels = new int[matrix.getHeight()][matrix.getWidth()];
+        for (int row = 0; row < matrix.getHeight(); row++) {
+            for (int col = 0; col < matrix.getWidth(); col++) {
+                pixels[row][col] = (int) matrix.getValues()[row][col];
+            }
+        }
+        this.height = matrix.getHeight();
+        this.width = matrix.getWidth();
+        this.label = label;
+    }
+
     public void setPixels (int[][] pixels) {
         this.pixels = pixels;
     }
@@ -97,6 +109,19 @@ public class Image implements Cloneable {
         vector.set(0, vector.getHeight() - 1, -1);
 
         return vector;
+    }
+
+    public Matrix pixelsToMatrix () {
+
+        Matrix matrix = new Matrix(height, width);
+
+        for (int row = 0; row < height; row++) {
+            for (int col = 0; col < width; col++) {
+                matrix.set(row, col, pixels[row][col]);
+            }
+        }
+
+        return matrix;
     }
 
     @Override

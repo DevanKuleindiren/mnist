@@ -6,11 +6,15 @@ package com.devankuleindiren.mnist;
 public class Strings {
 
     public static final String CONTROLPANEL_PANEL_LOADIMAGE = "Load Image";
-    public static final String CONTROLPANEL_PANEL_TRAINING = "Training";
+    public static final String CONTROLPANEL_PANEL_NEURALNETWORK = "Neural Network";
     public static final String CONTROLPANEL_PANEL_FILE = "File";
     public static final String CONTROLPANEL_PANEL_DRAWING = "Drawing";
     public static final String CONTROLPANEL_PANEL_ARTIFICIALDATA = "Artificial Data";
 
+    public static final String CONTROLPANEL_COMBOBOX_FNN = "Feed-forward NN";
+    public static final String CONTROLPANEL_COMBOBOX_CNN = "Convolutional NN";
+
+    public static final String CONTROLPANEL_LABELS_TRAININGSOURCE = "Training source:";
     public static final String CONTROLPANEL_LABELS_INPUTBATCHSIZE = "Input batch size:";
 
     public static final String CONTROLPANEL_BUTTONS_NEXT = "Next Image";

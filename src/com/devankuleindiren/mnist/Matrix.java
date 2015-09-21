@@ -15,13 +15,11 @@ public class Matrix implements Cloneable {
         values = new double[height][width];
     }
 
-    public int getHeight () {
-        return height;
-    }
-
+    public int getHeight () { return height; }
     public int getWidth () {
         return width;
     }
+    public double[][] getValues () { return values; }
 
     public double get (int row, int col) {
         if (row >= 0 && row < height && col >= 0 && col < width) {
@@ -111,5 +109,24 @@ public class Matrix implements Cloneable {
             }
         }
         return clone;
+    }
+
+    // USEFUL FOR NEURAL NETWORKS:
+
+    // SET THE GREATEST ACTIVATION TO 1 AND ALL OTHERS TO 0
+    public void rectifyActivations () {
+        for (int row = 0; row < height; row++) {
+            double tempMaxAct = values[row][0];
+            int tempMaxPos = 0;
+
+            for (int col = 0; col < width; col++) {
+                if (values[row][col] > tempMaxAct) {
+                    tempMaxAct = values[row][col];
+                    tempMaxPos = col;
+                }
+                values[row][col] = 0;
+            }
+            values[row][tempMaxPos] = 1;
+        }
     }
 }

@@ -12,12 +12,14 @@ public class ControlPanel extends JPanel {
 
     private static ControlPanel instance = null;
 
-    private static FNN2Layer neuralNetwork;
+    private static NeuralNetwork neuralNetwork;
 
     private JTextField loadImageSource;
     private JButton nextImage;
     private JLabel label;
 
+    private JComboBox neuralNetworkDropdown;
+    private JLabel trainingSourceLabel;
     private JTextField trainingSource;
     private JLabel batchSizeLabel;
     private JSpinner batchSizeSpinner;
@@ -37,9 +39,6 @@ public class ControlPanel extends JPanel {
     private JButton generate;
     private JButton saveData;
 
-    private int trainIter = 1000;
-    private double lR = 0.0001;
-
     private int inputNodesNo = 785;
     private int hiddenNeuronNo = 20;
     private int outputNeuronNo = 14;
@@ -57,32 +56,35 @@ public class ControlPanel extends JPanel {
         neuralNetwork = new FNN2Layer (inputNodesNo, hiddenNeuronNo, outputNeuronNo);
 
         // SECTIONS OF THE CONTROL PANEL
+        final JPanel loadImagePanel = new JPanel();
+        addBorder(loadImagePanel, Strings.CONTROLPANEL_PANEL_LOADIMAGE);
 
-        final JPanel loadImage = new JPanel();
-        addBorder(loadImage, Strings.CONTROLPANEL_PANEL_LOADIMAGE);
+        JPanel neuralNetworkPanel = new JPanel();
+        addBorder(neuralNetworkPanel, Strings.CONTROLPANEL_PANEL_NEURALNETWORK);
 
-        JPanel training = new JPanel();
-        addBorder(training, Strings.CONTROLPANEL_PANEL_TRAINING);
+        final JPanel saveLoadPanel = new JPanel();
+        addBorder(saveLoadPanel, Strings.CONTROLPANEL_PANEL_FILE);
 
-        final JPanel saveLoad = new JPanel();
-        addBorder(saveLoad, Strings.CONTROLPANEL_PANEL_FILE);
+        JPanel drawingPanel = new JPanel();
+        addBorder(drawingPanel, Strings.CONTROLPANEL_PANEL_DRAWING);
 
-        JPanel drawing = new JPanel();
-        addBorder(drawing, Strings.CONTROLPANEL_PANEL_DRAWING);
-
-        final JPanel artificialData = new JPanel();
-        addBorder(artificialData, Strings.CONTROLPANEL_PANEL_ARTIFICIALDATA);
+        final JPanel artificialDataPanel = new JPanel();
+        addBorder(artificialDataPanel, Strings.CONTROLPANEL_PANEL_ARTIFICIALDATA);
 
         loadImageSource = new JTextField(Strings.CONTROLPANEL_SOURCES_TESTING);
         nextImage = new JButton(Strings.CONTROLPANEL_BUTTONS_NEXT);
         label = new JLabel("-");
+        String[] neuralNetworkNames = { Strings.CONTROLPANEL_COMBOBOX_CNN, Strings.CONTROLPANEL_COMBOBOX_FNN };
+        neuralNetworkDropdown = new JComboBox(neuralNetworkNames);
+        neuralNetworkDropdown.setSelectedIndex(1);
+        trainingSourceLabel = new JLabel(Strings.CONTROLPANEL_LABELS_TRAININGSOURCE);
         trainingSource = new JTextField(Strings.CONTROLPANEL_SOURCES_TRAINING);
         batchSizeLabel = new JLabel(Strings.CONTROLPANEL_LABELS_INPUTBATCHSIZE);
         batchSizeSpinner = new JSpinner();
         batchSizeSpinner.setModel(new SpinnerNumberModel(14000, 1, 100000, 1));
         train = new JButton(Strings.CONTROLPANEL_BUTTONS_TRAIN);
         classify = new JButton(Strings.CONTROLPANEL_BUTTONS_CLASSIFY);
-        result = new JLabel("-");
+        result = new JLabel("");
         trainingProgressLabel = new JLabel("");
         trainingProgressBar = new JProgressBar(0, 100);
         trainingProgressBar.setStringPainted(true);
@@ -94,8 +96,8 @@ public class ControlPanel extends JPanel {
         generate = new JButton(Strings.CONTROLPANEL_BUTTONS_GENERATE);
         saveData = new JButton(Strings.CONTROLPANEL_BUTTONS_SAVEARTIFICIALDATA);
 
-        GroupLayout layout = new GroupLayout(loadImage);
-        loadImage.setLayout(layout);
+        GroupLayout layout = new GroupLayout(loadImagePanel);
+        loadImagePanel.setLayout(layout);
         layout.setHorizontalGroup(
                 layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING)
@@ -110,11 +112,13 @@ public class ControlPanel extends JPanel {
                         .addComponent(label)
         );
 
-        GroupLayout layout2 = new GroupLayout(training);
-        training.setLayout(layout2);
+        GroupLayout layout2 = new GroupLayout(neuralNetworkPanel);
+        neuralNetworkPanel.setLayout(layout2);
         layout2.setHorizontalGroup(
                 layout2.createSequentialGroup()
                         .addGroup(layout2.createParallelGroup(GroupLayout.Alignment.LEADING)
+                                        .addComponent(neuralNetworkDropdown)
+                                        .addComponent(trainingSourceLabel)
                                         .addComponent(trainingSource)
                                         .addComponent(batchSizeLabel)
                                         .addComponent(batchSizeSpinner)
@@ -127,6 +131,8 @@ public class ControlPanel extends JPanel {
         );
         layout2.setVerticalGroup(
                 layout2.createSequentialGroup()
+                        .addComponent(neuralNetworkDropdown)
+                        .addComponent(trainingSourceLabel)
                         .addComponent(trainingSource)
                         .addComponent(batchSizeLabel)
                         .addComponent(batchSizeSpinner)
@@ -137,8 +143,8 @@ public class ControlPanel extends JPanel {
                         .addComponent(trainingProgressBar)
         );
 
-        GroupLayout layout3 = new GroupLayout(saveLoad);
-        saveLoad.setLayout(layout3);
+        GroupLayout layout3 = new GroupLayout(saveLoadPanel);
+        saveLoadPanel.setLayout(layout3);
         layout3.setHorizontalGroup(
                 layout3.createSequentialGroup()
                         .addGroup(layout3.createParallelGroup(GroupLayout.Alignment.LEADING)
@@ -154,8 +160,8 @@ public class ControlPanel extends JPanel {
                         .addComponent(load)
         );
 
-        GroupLayout layout4 = new GroupLayout(drawing);
-        drawing.setLayout(layout4);
+        GroupLayout layout4 = new GroupLayout(drawingPanel);
+        drawingPanel.setLayout(layout4);
         layout4.setHorizontalGroup(
                 layout4.createSequentialGroup()
                         .addGroup(layout4.createParallelGroup(GroupLayout.Alignment.LEADING)
@@ -167,8 +173,8 @@ public class ControlPanel extends JPanel {
                         .addComponent(erase)
         );
 
-        GroupLayout layout5 = new GroupLayout(artificialData);
-        artificialData.setLayout(layout5);
+        GroupLayout layout5 = new GroupLayout(artificialDataPanel);
+        artificialDataPanel.setLayout(layout5);
         layout5.setHorizontalGroup(
                 layout5.createSequentialGroup()
                         .addGroup(layout5.createParallelGroup(GroupLayout.Alignment.LEADING)
@@ -191,19 +197,19 @@ public class ControlPanel extends JPanel {
         overall.setHorizontalGroup(
                 overall.createSequentialGroup()
                         .addGroup(overall.createParallelGroup(GroupLayout.Alignment.LEADING)
-                                .addComponent(loadImage)
-                                .addComponent(training)
-                                .addComponent(saveLoad)
-                                .addComponent(drawing)
-                                .addComponent(artificialData))
+                                .addComponent(loadImagePanel)
+                                .addComponent(neuralNetworkPanel)
+                                .addComponent(saveLoadPanel)
+                                .addComponent(drawingPanel)
+                                .addComponent(artificialDataPanel))
         );
         overall.setVerticalGroup(
                 overall.createSequentialGroup()
-                        .addComponent(loadImage)
-                        .addComponent(training)
-                        .addComponent(saveLoad)
-                        .addComponent(drawing)
-                        .addComponent(artificialData)
+                        .addComponent(loadImagePanel)
+                        .addComponent(neuralNetworkPanel)
+                        .addComponent(saveLoadPanel)
+                        .addComponent(drawingPanel)
+                        .addComponent(artificialDataPanel)
         );
 
 
@@ -222,6 +228,26 @@ public class ControlPanel extends JPanel {
             }
         });
 
+        neuralNetworkDropdown.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JComboBox comboBox = (JComboBox) e.getSource();
+                String selectedString = (String) comboBox.getSelectedItem();
+                if (selectedString.equals(Strings.CONTROLPANEL_COMBOBOX_CNN)) {
+                    if (!(neuralNetwork instanceof CNN_28x28)) {
+                        neuralNetwork = new CNN_28x28();
+                        loadWeights();
+                    }
+                } else {
+                    if (!(neuralNetwork instanceof FNN2Layer)) {
+                        neuralNetwork = new FNN2Layer(inputNodesNo, hiddenNeuronNo, outputNeuronNo);
+                        loadWeights();
+                    }
+                }
+            }
+        });
+
+
         train.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -232,10 +258,10 @@ public class ControlPanel extends JPanel {
                     int batchSize = (Integer) batchSizeSpinner.getValue();
                     System.out.println(batchSize);
 
-                    final MatrixBatch batch = DataLoader.getMatrixInputBatch(batchSize, trainingSource.getText());
+                    final MatrixBatch batch = DataLoader.getMatrixInputBatch(batchSize, trainingSource.getText(), true);
 
                     System.out.println("TRAINING FNN...");
-                    double error = neuralNetwork.train (batch.getInputs(), batch.getTargets(), lR, trainIter);
+                    double error = neuralNetwork.train(batch.getInputs(), batch.getTargets());
                     System.out.println();
                     System.out.println();
                     System.out.println("FNN TRAINED. ERROR: " + Double.toString((error / (batchSize * 10)) * 100) + " %");
@@ -378,7 +404,7 @@ public class ControlPanel extends JPanel {
 
         try {
             output = neuralNetwork.feedForward(input);
-            output = neuralNetwork.rectifyActivations(output);
+            output.rectifyActivations();
 
             String target = "0";
             for (int i = 0; i < output.getWidth(); i++) {

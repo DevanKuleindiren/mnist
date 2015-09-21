@@ -7,19 +7,48 @@ public class Kernel {
 
     private int height;
     private int width;
-    double[][] values;
+    private double[][] values;
+    private double biasWeight;
 
     public Kernel (int height, int width) {
         this.height = height;
         this.width = width;
-        values = new double[height][width];
+        this.values = new double[height][width];
     }
 
-    public Matrix apply (Matrix input) {
-        Matrix result = new Matrix(input.getHeight() - height + 1, input.getWidth() - width + 1);
+    public int getHeight() { return height; }
+    public int getWidth() { return width; }
 
-        // TODO
+    public void setBiasWeight (double newWeight) {
+        biasWeight = newWeight;
+    }
 
-        return result;
+    public void set (int row, int col, double newVal) {
+        values[row][col] = newVal;
+    }
+
+    public Matrix apply (Matrix input) throws MatrixDimensionMismatchException {
+
+        if (height <= input.getHeight() && width <= input.getWidth()) {
+            Matrix result = new Matrix(input.getHeight() - height + 1, input.getWidth() - width + 1);
+
+            for (int row = 0; row < result.getHeight(); row++) {
+                for (int col = 0; col < result.getWidth(); col++) {
+                    double sum = 0;
+
+                    for (int kRow = 0; kRow < height; kRow++) {
+                        for (int kCol = 0; kCol < width; kCol++) {
+                            sum += input.get(row + kRow, col + kCol) * values[kRow][kCol];
+                        }
+                    }
+                    sum += -1 * biasWeight;
+                    result.set(row, col, sum);
+                }
+            }
+
+            return result;
+        } else {
+            throw new MatrixDimensionMismatchException("image convolution");
+        }
     }
 }

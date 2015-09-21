@@ -41,39 +41,21 @@ public class FNN2Layer extends SwingWorker <Double, Void> implements NeuralNetwo
         }
     }
 
-    // INITIALISE THE WEIGHT ARRAYS
-    public void initWeights() {
+    // INITIALISE THE WEIGHT MATRICES
+    private void initWeights() {
         fillRandom(weights1, inputNodesNo);
         fillRandom(weights2, hiddenNeuronNo);
     }
 
-    // SET THE GREATEST ACTIVATION TO 1 AND ALL OTHERS TO 0
-    public Matrix rectifyActivations(Matrix activations) {
-        for (int row = 0; row < activations.getHeight(); row++) {
-
-            double tempMaxAct = activations.get(row, 0);
-            int tempMaxPos = 0;
-
-            for (int col = 0; col < activations.getWidth(); col++) {
-                if (activations.get(row, col) > tempMaxAct) {
-                    tempMaxAct = activations.get(row, col);
-                    tempMaxPos = col;
-                }
-                activations.set(row, col, 0);
-            }
-            activations.set(row, tempMaxPos, 1);
-        }
-        return activations;
-    }
-
     private Matrix inputVectors;
     private Matrix targets;
-    private double lR;
-    private int iterationNo;
+    private double lR = 0.0001;
+    private int iterationNo = 1000;
     private Double error;
 
     // TRAIN THE NET USING GIVEN INPUTS & TARGETS, WITH A GIVEN LEARNING RATE AND NUMBER OF ITERATIONS
-    public double train (Matrix inputVectors, Matrix targets, double lR, int iterationNo) throws MatrixDimensionMismatchException {
+    @Override
+    public double train (Matrix inputVectors, Matrix targets) throws MatrixDimensionMismatchException {
         this.inputVectors = inputVectors;
         this.targets = targets;
         this.lR = lR;
