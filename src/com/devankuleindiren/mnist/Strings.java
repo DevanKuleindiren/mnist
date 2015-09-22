@@ -28,7 +28,8 @@ public class Strings {
 
     public static final String CONTROLPANEL_SOURCES_TESTING = "mnist_test.csv";
     public static final String CONTROLPANEL_SOURCES_TRAINING = "mnist_train.csv";
-    public static final String CONTROLPANEL_SOURCES_WEIGHTS = "weights.txt";
+    public static final String CONTROLPANEL_SOURCES_WEIGHTS_FNN = "weights_FNN.txt";
+    public static final String CONTROLPANEL_SOURCES_WEIGHTS_CNN = "weights_CNN.txt";
     public static final String CONTROLPANEL_SOURCES_ARTIFICIALDATA = "artificialData.txt";
 
     public static final String CONTROLPANEL_NEURALNETWORK_TRAININGINPROGRESS = "Training...";

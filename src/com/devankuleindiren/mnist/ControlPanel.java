@@ -52,9 +52,6 @@ public class ControlPanel extends JPanel {
     private ControlPanel() {
         super();
 
-        // GET INSTANCE OF NEURAL NETWORK
-        neuralNetwork = new FNN2Layer (inputNodesNo, hiddenNeuronNo, outputNeuronNo);
-
         // SECTIONS OF THE CONTROL PANEL
         final JPanel loadImagePanel = new JPanel();
         addBorder(loadImagePanel, Strings.CONTROLPANEL_PANEL_LOADIMAGE);
@@ -88,13 +85,22 @@ public class ControlPanel extends JPanel {
         trainingProgressLabel = new JLabel("");
         trainingProgressBar = new JProgressBar(0, 100);
         trainingProgressBar.setStringPainted(true);
-        weightsSource = new JTextField(Strings.CONTROLPANEL_SOURCES_WEIGHTS);
+        weightsSource = new JTextField();
         saveWeights = new JButton(Strings.CONTROLPANEL_BUTTONS_SAVEWEIGHTS);
         load = new JButton(Strings.CONTROLPANEL_BUTTONS_LOADWEIGHTS);
         erase = new JButton(Strings.CONTROLPANEL_BUTTONS_ERASE);
         artificialDataSource = new JTextField(Strings.CONTROLPANEL_SOURCES_ARTIFICIALDATA);
         generate = new JButton(Strings.CONTROLPANEL_BUTTONS_GENERATE);
         saveData = new JButton(Strings.CONTROLPANEL_BUTTONS_SAVEARTIFICIALDATA);
+
+        // GET INSTANCE OF THE SELECTED NEURAL NETWORK
+        if (neuralNetworkDropdown.getSelectedItem().equals(Strings.CONTROLPANEL_COMBOBOX_FNN)) {
+            neuralNetwork = new FNN2Layer (inputNodesNo, hiddenNeuronNo, outputNeuronNo);
+            weightsSource.setText(Strings.CONTROLPANEL_SOURCES_WEIGHTS_FNN);
+        } else {
+            neuralNetwork = new FNN2Layer (inputNodesNo, hiddenNeuronNo, outputNeuronNo);
+            weightsSource.setText(Strings.CONTROLPANEL_SOURCES_WEIGHTS_CNN);
+        }
 
         GroupLayout layout = new GroupLayout(loadImagePanel);
         loadImagePanel.setLayout(layout);
@@ -236,11 +242,13 @@ public class ControlPanel extends JPanel {
                 if (selectedString.equals(Strings.CONTROLPANEL_COMBOBOX_CNN)) {
                     if (!(neuralNetwork instanceof CNN_28x28)) {
                         neuralNetwork = new CNN_28x28();
+                        weightsSource.setText(Strings.CONTROLPANEL_SOURCES_WEIGHTS_CNN);
                         loadWeights();
                     }
                 } else {
                     if (!(neuralNetwork instanceof FNN2Layer)) {
                         neuralNetwork = new FNN2Layer(inputNodesNo, hiddenNeuronNo, outputNeuronNo);
+                        weightsSource.setText(Strings.CONTROLPANEL_SOURCES_WEIGHTS_FNN);
                         loadWeights();
                     }
                 }
