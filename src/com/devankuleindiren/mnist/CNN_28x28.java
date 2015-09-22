@@ -1,8 +1,7 @@
 package com.devankuleindiren.mnist;
 
 import javax.swing.*;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
 
 /**
  * Created by Devan Kuleindiren on 21/09/15.
@@ -23,8 +22,8 @@ public class CNN_28x28 extends SwingWorker<Double, Void> implements NeuralNetwor
     private int outputNeuronNo = 14;
 
     // WEIGHT MATRICES FOR FULLY CONNECTED LAYERS
-    private Matrix weights1 = new Matrix(layer5NeuronNo + 1, layer6NeuronNo);
-    private Matrix weights2 = new Matrix(layer6NeuronNo + 1, outputNeuronNo);
+    private Matrix weightsFC1 = new Matrix(layer5NeuronNo + 1, layer6NeuronNo);
+    private Matrix weightsFC2 = new Matrix(layer6NeuronNo + 1, outputNeuronNo);
 
     public CNN_28x28 () {
         initWeights();
@@ -43,8 +42,8 @@ public class CNN_28x28 extends SwingWorker<Double, Void> implements NeuralNetwor
 
     // INITIALISE THE WEIGHT MATRICES
     private void initWeights() {
-        fillRandom(weights1, layer5NeuronNo);
-        fillRandom(weights2, layer6NeuronNo);
+        fillRandom(weightsFC1, layer5NeuronNo);
+        fillRandom(weightsFC2, layer6NeuronNo);
     }
 
     // INITIALISE EACH KERNEL VALUE TO A RANDOM VALUE BETWEEN +bound AND -bound
@@ -109,6 +108,7 @@ public class CNN_28x28 extends SwingWorker<Double, Void> implements NeuralNetwor
         Matrix[][] inputs = preprocessInputVectors(inputVectors);
         Matrix[] C1Activations = feedForwardConvolutionLayer(inputs[0], kernelsC1);
         Matrix[] S1Activations = feedForwardSubsampleLayer(C1Activations);
+        // EACH ROW DETERMINES WHICH INPUTS A KERNEL APPLIES TO
         boolean[][] kernelConnections = {
                 {true, true, true, false, false, false},
                 {false, true, true, true, false, false},
@@ -130,10 +130,11 @@ public class CNN_28x28 extends SwingWorker<Double, Void> implements NeuralNetwor
         Matrix[] C2Activations = feedForwardConvolutionLayer(S1Activations, kernelsC2, kernelConnections);
         Matrix[] S2Activations = feedForwardSubsampleLayer(C2Activations);
         Matrix[] C3Activations = feedForwardConvolutionLayer(S2Activations, kernelsC3);
+        Matrix FC1Input = flatten(C3Activations);
+        Matrix FC2Input = feedForwardFullyConnectedLayer1(FC1Input);
+        Matrix output = feedForwardFullyConnectedLayer2(FC2Input);
 
-        // TODO: Flatten C3Activations and pass it through the fully connected layers as normal
-
-        return null;
+        return output;
     }
 
     // PERFORM A FOWARD PASS THROUGH A CONVOLUTIONAL LAYER IN WHICH KERNELS APPLY ALL INPUTS
@@ -144,7 +145,7 @@ public class CNN_28x28 extends SwingWorker<Double, Void> implements NeuralNetwor
         for (int k = 0; k < kernels.length; k++) {
             Matrix output = new Matrix (inputs[0].getHeight() - kernels[0].getHeight() + 1, inputs[0].getWidth() - kernels[0].getWidth() + 1);
             for (int i = 0; i < inputs.length; i++) {
-                output.add(kernels[k].apply(inputs[i]));
+                output.add(kernels[k].convolute(inputs[i]));
             }
             outputs[k] = output;
         }
@@ -161,7 +162,7 @@ public class CNN_28x28 extends SwingWorker<Double, Void> implements NeuralNetwor
             Matrix output = new Matrix (inputs[0].getHeight() - kernels[0].getHeight() + 1, inputs[0].getWidth() - kernels[0].getWidth() + 1);
             for (int i = 0; i < kernelConnections[k].length; i++) {
                 if (kernelConnections[k][i]) {
-                    output.add(kernels[k].apply(inputs[i]));
+                    output.add(kernels[k].convolute(inputs[i]));
                 }
             }
             outputs[k] = output;
@@ -170,6 +171,7 @@ public class CNN_28x28 extends SwingWorker<Double, Void> implements NeuralNetwor
         return outputs;
     }
 
+    // PERFORM A FORWARD PASS THROUGH A SUBSAMPLE LAYER USING MAX POOLING
     private Matrix[] feedForwardSubsampleLayer (Matrix[] inputs) {
         Matrix[] outputs = new Matrix[inputs.length];
 
@@ -181,7 +183,7 @@ public class CNN_28x28 extends SwingWorker<Double, Void> implements NeuralNetwor
     }
 
     // METHOD FOR MAXPOOLING IN SUBSAMPLING LAYERS OF CNN
-    public Matrix maxPool (Matrix input) {
+    private Matrix maxPool (Matrix input) {
         Matrix result = new Matrix (input.getHeight() / 2, input.getWidth() / 2);
 
         for (int row = 0; row < result.getHeight(); row++) {
@@ -199,13 +201,123 @@ public class CNN_28x28 extends SwingWorker<Double, Void> implements NeuralNetwor
         return result;
     }
 
+    // FLATTEN OUTPUTS OF THE C3 LAYER INTO ONE LONG INPUT VECTOR FOR THE FULLY CONNECTED LAYERS
+    // THIS ASSUMES EACH OF THE MATRICES IN matrices HAS DIMENSION 1x1
+    private Matrix flatten (Matrix[] matrices) {
+        Matrix result = new Matrix(1, matrices.length + 1);
+
+        for (int col = 0; col < result.getWidth() - 1; col++) {
+            result.set(0, col, matrices[col].get(0, 0));
+        }
+
+        // ADD THE BIAS INPUT
+        result.set(0, result.getWidth() - 1, -1);
+
+        return result;
+    }
+
+    private Matrix feedForwardFullyConnectedLayer1 (Matrix input) throws MatrixDimensionMismatchException {
+        return input.feedForwardAndAddBias(weightsFC1);
+    }
+
+    private Matrix feedForwardFullyConnectedLayer2 (Matrix input) throws MatrixDimensionMismatchException {
+        Matrix output = input.multiply(weightsFC2);
+        output.applyLogisticActivation();
+
+        return output;
+    }
+
     @Override
     public void loadWeights(String source) throws FileNotFoundException, IOException, InvalidWeightFormatException {
+        BufferedReader bufferedReader = new BufferedReader(new FileReader(source));
 
+        // READ EACH OF THE C1 KERNELS
+        for (Kernel k : kernelsC1) readKernel(k, bufferedReader);
+
+        // READ EACH OF THE C2 KERNELS
+        for (Kernel k : kernelsC2) readKernel(k, bufferedReader);
+
+        // READ EACH OF THE C3 KERNELS
+        for (Kernel k : kernelsC3) readKernel(k, bufferedReader);
+
+        // READ THE FC1 WEIGHTS
+        readWeights(weightsFC1, bufferedReader);
+
+        // READ THE FC2 WEIGHTS
+        readWeights(weightsFC2, bufferedReader);
+
+        bufferedReader.close();
+        JOptionPane.showMessageDialog(null, "Loaded weights from " + source);
     }
 
     @Override
     public void saveWeights(String destination) throws FileNotFoundException, IOException {
+        BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(destination, false));
 
+        // WRITE EACH OF THE C1 KERNELS
+        for (Kernel k : kernelsC1) writeKernel(k, bufferedWriter);
+
+        // WRITE EACH OF THE C2 KERNELS
+        for (Kernel k : kernelsC2) writeKernel(k, bufferedWriter);
+
+        // WRITE EACH OF THE C3 KERNELS
+        for (Kernel k : kernelsC3) writeKernel(k, bufferedWriter);
+
+        // WRITE THE FC1 WEIGHTS
+        writeWeights(weightsFC1, bufferedWriter);
+        bufferedWriter.write("\n");
+
+        // WRITE THE FC2 WEIGHTS
+        writeWeights(weightsFC2, bufferedWriter);
+
+        bufferedWriter.close();
+        JOptionPane.showMessageDialog(null, "Saved weights to " + destination);
+    }
+
+    private void writeKernel (Kernel kernel, BufferedWriter bufferedWriter) throws IOException {
+        for (int row = 0; row < kernel.getHeight(); row++) {
+            for (int col = 0; col < kernel.getWidth(); col++) {
+                bufferedWriter.write(Double.toString(kernel.get(row, col)) + ",");
+            }
+        }
+        bufferedWriter.write(Double.toString(kernel.getBiasWeight()));
+        bufferedWriter.write("\n");
+    }
+
+    private void readKernel (Kernel kernel, BufferedReader bufferedReader) throws IOException, InvalidWeightFormatException {
+        try {
+            String kernelString = bufferedReader.readLine();
+            String[] kernelArray = kernelString.split(",");
+            for (int row = 0; row < kernel.getHeight(); row++) {
+                for (int col = 0; col < kernel.getWidth(); col++) {
+                    kernel.set(row, col, Double.parseDouble(kernelArray[(row * kernel.getWidth()) + col]));
+                }
+            }
+            kernel.setBiasWeight(Double.parseDouble(kernelArray[kernel.getHeight() * kernel.getWidth()]));
+        } catch (ArrayIndexOutOfBoundsException e) {
+            throw new InvalidWeightFormatException("A kernel in the file is incorrectly formatted.");
+        }
+    }
+
+    private void writeWeights (Matrix weights, BufferedWriter bufferedWriter) throws IOException {
+        for (int row = 0; row < weights.getHeight(); row++) {
+            for (int col = 0; col < weights.getWidth(); col++) {
+                bufferedWriter.write(Double.toString(weights.get(row, col)) + ",");
+            }
+        }
+    }
+
+    private void readWeights (Matrix weights, BufferedReader bufferedReader) throws IOException, InvalidWeightFormatException {
+        try {
+            String weightString = bufferedReader.readLine();
+            String[] weightArray = weightString.split(",");
+            for (int row = 0; row < weights.getHeight(); row++) {
+                for (int col = 0; col < weights.getWidth(); col++) {
+                    weights.set(row, col, Double.parseDouble(weightArray[(row * weights.getWidth()) + col]));
+                }
+            }
+        } catch (ArrayIndexOutOfBoundsException e) {
+            throw new InvalidWeightFormatException("A weight matrix in the file is incorrectly formatted.");
+        }
     }
 }

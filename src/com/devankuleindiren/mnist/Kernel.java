@@ -19,15 +19,23 @@ public class Kernel {
     public int getHeight() { return height; }
     public int getWidth() { return width; }
 
-    public void setBiasWeight (double newWeight) {
-        biasWeight = newWeight;
+    public double getBiasWeight () { return biasWeight; }
+    public void setBiasWeight (double newWeight) { biasWeight = newWeight; }
+
+    public double get (int row, int col) {
+        if (row >= 0 && row < height && col >= 0 && col < width) {
+            return values[row][col];
+        }
+        return 0;
     }
 
     public void set (int row, int col, double newVal) {
-        values[row][col] = newVal;
+        if (row >= 0 && row < height && col >= 0 && col < width) {
+            values[row][col] = newVal;
+        }
     }
 
-    public Matrix apply (Matrix input) throws MatrixDimensionMismatchException {
+    public Matrix convolute (Matrix input) throws MatrixDimensionMismatchException {
 
         if (height <= input.getHeight() && width <= input.getWidth()) {
             Matrix result = new Matrix(input.getHeight() - height + 1, input.getWidth() - width + 1);

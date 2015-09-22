@@ -166,40 +166,15 @@ public class FNN2Layer extends SwingWorker <Double, Void> implements NeuralNetwo
 
     // COMPUTE THE ACTIVATIONS OF THE HIDDEN LAYER NODES GIVEN THE INPUT VECTORS
     private Matrix feedForwardP1 (Matrix inputVectors) throws MatrixDimensionMismatchException {
-
-        Matrix hiddenActsInitial;
-        Matrix hiddenActs = new Matrix (inputVectors.getHeight(), hiddenNeuronNo + 1);
-
-        // FIRST PASS
-        hiddenActsInitial = inputVectors.multiply(weights1);
-
-        // ACTIVATION FUNCTION
-        for (int row = 0; row < inputVectors.getHeight(); row++) {
-            for (int col = 0; col < hiddenNeuronNo; col++) {
-                hiddenActs.set(row, col, 1/(1+Math.exp(-hiddenActsInitial.get(row, col))));
-            }
-        }
-        // ADD BIAS COLUMN
-        for (int row = 0; row < inputVectors.getHeight(); row++) {
-            hiddenActs.set(row, hiddenNeuronNo, -1);
-        }
-
-        return hiddenActs;
+        return inputVectors.feedForwardAndAddBias(weights1);
     }
 
     // COMPUTE THE ACTIVATIONS OF THE OUTPUT LAYER NODES GIVEN THE HIDDEN LAYER ACTIVATIONS
     private Matrix feedForwardP2 (Matrix hiddenActs) throws MatrixDimensionMismatchException {
         Matrix outputActs;
 
-        // SECOND PASS
         outputActs = hiddenActs.multiply(weights2);
-
-        // ACTIVATION FUNCTION
-        for (int row = 0; row < hiddenActs.getHeight(); row++) {
-            for (int col = 0; col < outputNeuronNo; col++) {
-                outputActs.set(row, col, 1/(1+Math.exp(-outputActs.get(row, col))));
-            }
-        }
+        outputActs.applyLogisticActivation();
 
         return outputActs;
     }
@@ -226,7 +201,7 @@ public class FNN2Layer extends SwingWorker <Double, Void> implements NeuralNetwo
                     try {
                         weights1.set(inputNode, hiddenNeuron, Double.parseDouble(weights1Array[(inputNode * hiddenNeuronNo) + hiddenNeuron]));
                     } catch (ArrayIndexOutOfBoundsException exception) {
-                        System.out.println(inputNode + ", " + hiddenNeuron);
+                        throw new InvalidWeightFormatException("The network of weights in the file is invalid.");
                     }
                 }
             }
@@ -239,7 +214,7 @@ public class FNN2Layer extends SwingWorker <Double, Void> implements NeuralNetwo
                     try {
                         weights2.set(hiddenNeuron, outputNeuron, Double.parseDouble(weights2Array[(hiddenNeuron * outputNeuronNo) + outputNeuron]));
                     } catch (ArrayIndexOutOfBoundsException exception) {
-                        System.out.println(hiddenNeuron + ", " + outputNeuron);
+                        throw new InvalidWeightFormatException("The network of weights in the file is invalid.");
                     }
                 }
             }

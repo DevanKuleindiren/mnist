@@ -25,7 +25,7 @@ public class Matrix implements Cloneable {
         if (row >= 0 && row < height && col >= 0 && col < width) {
             return values[row][col];
         }
-        else return 0;
+        return 0;
     }
 
     public void set (int row, int col, double newVal) {
@@ -113,6 +113,37 @@ public class Matrix implements Cloneable {
 
     // USEFUL FOR NEURAL NETWORKS:
 
+    // MULTIPLY THE MATRIX BY THE WEIGHTS, APPLY THE ACTIVATION FUNCTION AND ADD A BIAS COLUMN
+    public Matrix feedForwardAndAddBias (Matrix weights) throws MatrixDimensionMismatchException {
+
+        if (width == weights.height) {
+            Matrix result = new Matrix (height, weights.width + 1);
+
+            // PERFORM MULTIPLICATION AGAINST WEIGHTS MATRIX
+            for (int row = 0; row < result.height; row++) {
+                for (int col = 0; col < result.width - 1; col++) {
+                    double value = 0;
+                    for (int count = 0; count < width; count++) {
+                        value += values[row][count] * weights.values[count][col];
+                    }
+                    result.values[row][col] = value;
+                }
+            }
+
+            // APPLY THE ACTIVATION FUNCTION
+            result.applyLogisticActivation();
+
+            // ADD THE BIAS INPUTS FOR THE NEXT LAYER
+            for (int row = 0; row < result.height; row++) {
+                result.values[row][result.width - 1] = -1;
+            }
+
+            return result;
+        } else {
+            throw new MatrixDimensionMismatchException("multiplication");
+        }
+    }
+
     // SET THE GREATEST ACTIVATION TO 1 AND ALL OTHERS TO 0
     public void rectifyActivations () {
         for (int row = 0; row < height; row++) {
@@ -127,6 +158,15 @@ public class Matrix implements Cloneable {
                 values[row][col] = 0;
             }
             values[row][tempMaxPos] = 1;
+        }
+    }
+
+    // APPLY LOGISTIC ACTIVATION FUNCTION
+    public void applyLogisticActivation () {
+        for (int row = 0; row < height; row++) {
+            for (int col = 0; col < width; col++) {
+                values[row][col] = 1 / (1 + Math.exp(-values[row][col]));
+            }
         }
     }
 }

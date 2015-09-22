@@ -23,9 +23,9 @@ public class DataLoader {
         return instance;
     }
 
-    public static MatrixBatch getMatrixInputBatch (int batchSize, String fileName, boolean includeBias) throws IOException {
+    public static MatrixBatch getMatrixInputBatch (int batchSize, String fileName) throws IOException {
 
-        Matrix inputs = new Matrix(batchSize, (includeBias ? 785 : 784));
+        Matrix inputs = new Matrix(batchSize, 785);
         Matrix targets = new Matrix(batchSize, 14);
 
         try {
@@ -36,7 +36,7 @@ public class DataLoader {
                 String[] values = temp.split(",");
 
                 for (int j = 1; j < values.length; j++) inputs.set(i, j - 1, Double.parseDouble(values[j]) / 255.0);
-                if (includeBias) inputs.set(i, 784, -1);
+                inputs.set(i, 784, -1);
 
                 int target;
                 if (values[0].equals("+")) {
