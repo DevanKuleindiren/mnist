@@ -12,9 +12,9 @@ public class CNN_28x28 extends SwingWorker<Double, Void> implements NeuralNetwor
     final private static int inputNodesNo = 785;
 
     // KERNELS FOR THE CONVOLUTION LAYERS
-    private Kernel[] kernelsC1 = new Kernel[6];
-    private Kernel[] kernelsC2 = new Kernel[16];
-    private Kernel[] kernelsC3 = new Kernel[50];
+    private Kernel[][] kernelsC1 = new Kernel[6][1];
+    private Kernel[][] kernelsC2 = new Kernel[16][6];
+    private Kernel[][] kernelsC3 = new Kernel[50][16];
 
     // NUMBER OF NEURONS FOR FULLY CONNECTED LAYERS
     private int layer5NeuronNo = 50;
@@ -58,17 +58,23 @@ public class CNN_28x28 extends SwingWorker<Double, Void> implements NeuralNetwor
 
     // INITIALISE THE KERNELS
     private void initKernels () {
-        for (int k = 0; k < kernelsC1.length; k++) {
-            kernelsC1[k] = new Kernel(5, 5);
-            fillKernel(kernelsC1[k], 0.1);
+        for (int kernel = 0; kernel < kernelsC1.length; kernel++) {
+            for (int input = 0; input < kernelsC1[kernel].length; input++) {
+                kernelsC1[kernel][input] = new Kernel(5, 5);
+                fillKernel(kernelsC1[kernel][input], 0.1);
+            }
         }
-        for (int k = 0; k < kernelsC2.length; k++) {
-            kernelsC2[k] = new Kernel(5, 5);
-            fillKernel(kernelsC2[k], 0.1);
+        for (int kernel = 0; kernel < kernelsC2.length; kernel++) {
+            for (int input = 0; input < kernelsC2[kernel].length; input++) {
+                kernelsC2[kernel][input] = new Kernel(5, 5);
+                fillKernel(kernelsC2[kernel][input], 0.1);
+            }
         }
-        for (int k = 0; k < kernelsC3.length; k++) {
-            kernelsC3[k] = new Kernel(4, 4);
-            fillKernel(kernelsC3[k], 0.1);
+        for (int kernel = 0; kernel < kernelsC3.length; kernel++) {
+            for (int input = 0; input < kernelsC3[kernel].length; input++) {
+                kernelsC3[kernel][input] = new Kernel(4, 4);
+                fillKernel(kernelsC3[kernel][input], 0.1);
+            }
         }
     }
 
@@ -108,26 +114,7 @@ public class CNN_28x28 extends SwingWorker<Double, Void> implements NeuralNetwor
         Matrix[][] inputs = preprocessInputVectors(inputVectors);
         Matrix[] C1Activations = feedForwardConvolutionLayer(inputs[0], kernelsC1);
         Matrix[] S1Activations = feedForwardSubsampleLayer(C1Activations);
-        // EACH ROW DETERMINES WHICH INPUTS A KERNEL APPLIES TO
-        boolean[][] kernelConnections = {
-                {true, true, true, false, false, false},
-                {false, true, true, true, false, false},
-                {false, false, true, true, true, false},
-                {false, false, false, true, true, true},
-                {true, false, false, false, true, true},
-                {true, true, false, false, false, true},
-                {true, true, true, true, false, false},
-                {false, true, true, true, true, false},
-                {false, false, true, true, true, true},
-                {true, false, false, true, true, true},
-                {true, true, false, false, true, true},
-                {true, true, true, false, false, true},
-                {true, true, false, true, true, false},
-                {false, true, true, false, true, true},
-                {true, false, true, true, false, true},
-                {true, true, true, true, true, true},
-        };
-        Matrix[] C2Activations = feedForwardConvolutionLayer(S1Activations, kernelsC2, kernelConnections);
+        Matrix[] C2Activations = feedForwardConvolutionLayer(S1Activations, kernelsC2);
         Matrix[] S2Activations = feedForwardSubsampleLayer(C2Activations);
         Matrix[] C3Activations = feedForwardConvolutionLayer(S2Activations, kernelsC3);
         Matrix FC1Input = flatten(C3Activations);
@@ -138,34 +125,14 @@ public class CNN_28x28 extends SwingWorker<Double, Void> implements NeuralNetwor
     }
 
     // PERFORM A FOWARD PASS THROUGH A CONVOLUTIONAL LAYER IN WHICH KERNELS APPLY ALL INPUTS
-    private Matrix[] feedForwardConvolutionLayer (Matrix[] inputs, Kernel[] kernels) throws MatrixDimensionMismatchException {
+    private Matrix[] feedForwardConvolutionLayer (Matrix[] inputs, Kernel[][] kernels) throws MatrixDimensionMismatchException {
         Matrix[] outputs = new Matrix[kernels.length];
 
         // APPLY CONVOLUTIONS
         for (int k = 0; k < kernels.length; k++) {
-            Matrix output = new Matrix (inputs[0].getHeight() - kernels[0].getHeight() + 1, inputs[0].getWidth() - kernels[0].getWidth() + 1);
+            Matrix output = new Matrix (inputs[0].getHeight() - kernels[0][0].getHeight() + 1, inputs[0].getWidth() - kernels[0][0].getWidth() + 1);
             for (int i = 0; i < inputs.length; i++) {
-                output = output.add(kernels[k].convolute(inputs[i]));
-            }
-            outputs[k] = output;
-        }
-
-        for (Matrix o : outputs) o.applyLogisticActivation();
-
-        return outputs;
-    }
-
-    // PERFORM A FOWARD PASS THROUGH A CONVOLUTIONAL LAYER IN WHICH KERNELS APPLY TO SPECIFIC INPUTS
-    private Matrix[] feedForwardConvolutionLayer (Matrix[] inputs, Kernel[] kernels, boolean[][] kernelConnections) throws MatrixDimensionMismatchException {
-        Matrix[] outputs = new Matrix[kernels.length];
-
-        // APPLY CONVOLUTIONS
-        for (int k = 0; k < kernels.length; k++) {
-            Matrix output = new Matrix (inputs[0].getHeight() - kernels[0].getHeight() + 1, inputs[0].getWidth() - kernels[0].getWidth() + 1);
-            for (int i = 0; i < kernelConnections[k].length; i++) {
-                if (kernelConnections[k][i]) {
-                    output = output.add(kernels[k].convolute(inputs[i]));
-                }
+                output = output.add(kernels[k][i].convolute(inputs[i]));
             }
             outputs[k] = output;
         }
@@ -236,13 +203,19 @@ public class CNN_28x28 extends SwingWorker<Double, Void> implements NeuralNetwor
         BufferedReader bufferedReader = new BufferedReader(new FileReader(source));
 
         // READ EACH OF THE C1 KERNELS
-        for (Kernel k : kernelsC1) readKernel(k, bufferedReader);
+        for (Kernel[] ks : kernelsC1) {
+            for (Kernel k : ks) readKernel(k, bufferedReader);
+        }
 
         // READ EACH OF THE C2 KERNELS
-        for (Kernel k : kernelsC2) readKernel(k, bufferedReader);
+        for (Kernel[] ks : kernelsC2) {
+            for (Kernel k : ks) readKernel(k, bufferedReader);
+        }
 
         // READ EACH OF THE C3 KERNELS
-        for (Kernel k : kernelsC3) readKernel(k, bufferedReader);
+        for (Kernel[] ks : kernelsC3) {
+            for (Kernel k : ks) readKernel(k, bufferedReader);
+        }
 
         // READ THE FC1 WEIGHTS
         readWeights(weightsFC1, bufferedReader);
@@ -259,13 +232,19 @@ public class CNN_28x28 extends SwingWorker<Double, Void> implements NeuralNetwor
         BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(destination, false));
 
         // WRITE EACH OF THE C1 KERNELS
-        for (Kernel k : kernelsC1) writeKernel(k, bufferedWriter);
+        for (Kernel[] ks : kernelsC1) {
+            for (Kernel k : ks) writeKernel(k, bufferedWriter);
+        }
 
         // WRITE EACH OF THE C2 KERNELS
-        for (Kernel k : kernelsC2) writeKernel(k, bufferedWriter);
+        for (Kernel[] ks : kernelsC2) {
+            for (Kernel k : ks) writeKernel(k, bufferedWriter);
+        }
 
         // WRITE EACH OF THE C3 KERNELS
-        for (Kernel k : kernelsC3) writeKernel(k, bufferedWriter);
+        for (Kernel[] ks : kernelsC3) {
+            for (Kernel k : ks) writeKernel(k, bufferedWriter);
+        }
 
         // WRITE THE FC1 WEIGHTS
         writeWeights(weightsFC1, bufferedWriter);
