@@ -145,10 +145,12 @@ public class CNN_28x28 extends SwingWorker<Double, Void> implements NeuralNetwor
         for (int k = 0; k < kernels.length; k++) {
             Matrix output = new Matrix (inputs[0].getHeight() - kernels[0].getHeight() + 1, inputs[0].getWidth() - kernels[0].getWidth() + 1);
             for (int i = 0; i < inputs.length; i++) {
-                output.add(kernels[k].convolute(inputs[i]));
+                output = output.add(kernels[k].convolute(inputs[i]));
             }
             outputs[k] = output;
         }
+
+        for (Matrix o : outputs) o.applyLogisticActivation();
 
         return outputs;
     }
@@ -162,11 +164,13 @@ public class CNN_28x28 extends SwingWorker<Double, Void> implements NeuralNetwor
             Matrix output = new Matrix (inputs[0].getHeight() - kernels[0].getHeight() + 1, inputs[0].getWidth() - kernels[0].getWidth() + 1);
             for (int i = 0; i < kernelConnections[k].length; i++) {
                 if (kernelConnections[k][i]) {
-                    output.add(kernels[k].convolute(inputs[i]));
+                    output = output.add(kernels[k].convolute(inputs[i]));
                 }
             }
             outputs[k] = output;
         }
+
+        for (Matrix o : outputs) o.applyLogisticActivation();
 
         return outputs;
     }

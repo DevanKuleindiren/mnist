@@ -73,7 +73,7 @@ public class ControlPanel extends JPanel {
         label = new JLabel("-");
         String[] neuralNetworkNames = { Strings.CONTROLPANEL_COMBOBOX_CNN, Strings.CONTROLPANEL_COMBOBOX_FNN };
         neuralNetworkDropdown = new JComboBox(neuralNetworkNames);
-        neuralNetworkDropdown.setSelectedIndex(1);
+        neuralNetworkDropdown.setSelectedIndex(0);
         trainingSourceLabel = new JLabel(Strings.CONTROLPANEL_LABELS_TRAININGSOURCE);
         trainingSource = new JTextField(Strings.CONTROLPANEL_SOURCES_TRAINING);
         batchSizeLabel = new JLabel(Strings.CONTROLPANEL_LABELS_INPUTBATCHSIZE);
@@ -98,7 +98,7 @@ public class ControlPanel extends JPanel {
             neuralNetwork = new FNN2Layer (inputNodesNo, hiddenNeuronNo, outputNeuronNo);
             weightsSource.setText(Strings.CONTROLPANEL_SOURCES_WEIGHTS_FNN);
         } else {
-            neuralNetwork = new FNN2Layer (inputNodesNo, hiddenNeuronNo, outputNeuronNo);
+            neuralNetwork = new CNN_28x28();
             weightsSource.setText(Strings.CONTROLPANEL_SOURCES_WEIGHTS_CNN);
         }
 

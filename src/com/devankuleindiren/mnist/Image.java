@@ -106,7 +106,7 @@ public class Image implements Cloneable {
             }
         }
 
-        vector.set(0, vector.getHeight() - 1, -1);
+        vector.set(0, vector.getWidth() - 1, -1);
 
         return vector;
     }
