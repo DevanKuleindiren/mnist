@@ -264,15 +264,11 @@ public class ControlPanel extends JPanel {
                 System.out.println("LOADING INPUT BATCH...");
                 try {
                     int batchSize = (Integer) batchSizeSpinner.getValue();
-                    System.out.println(batchSize);
 
                     final MatrixBatch batch = DataLoader.getMatrixInputBatch(batchSize, trainingSource.getText());
 
-                    System.out.println("TRAINING FNN...");
-                    double error = neuralNetwork.train(batch.getInputs(), batch.getTargets());
-                    System.out.println();
-                    System.out.println();
-                    System.out.println("FNN TRAINED. ERROR: " + Double.toString((error / (batchSize * 10)) * 100) + " %");
+                    System.out.println("TRAINING NN...");
+                    neuralNetwork.train(batch.getInputs(), batch.getTargets());
 
                 } catch (IOException exception) {
                     JOptionPane.showMessageDialog(null, exception.getMessage());

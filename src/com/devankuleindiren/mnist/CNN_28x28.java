@@ -1,6 +1,8 @@
 package com.devankuleindiren.mnist;
 
 import javax.swing.*;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.*;
 
 /**
@@ -8,22 +10,27 @@ import java.io.*;
  */
 public class CNN_28x28 extends SwingWorker<Double, Void> implements NeuralNetwork {
 
-    // THIS CONVOLUTIONAL NEURAL NETWORK HAS A FIXED STRUCTURE
-    final private static int inputNodesNo = 785;
+    // NUMBER OF NEURONS FOR FULLY CONNECTED LAYERS
+    private int layer5NeuronNo = 50;
+    private int layer6NeuronNo = 20;
+    private int outputNeuronNo = 14;
+
+    // THE DIMENSION OF THE FEATURE MAPS IN LAYERS C1 AND C2
+    private int dimC1 = 24;
+    private int dimC2 = 8;
 
     // KERNELS FOR THE CONVOLUTION LAYERS
     private Kernel[][] kernelsC1 = new Kernel[6][1];
     private Kernel[][] kernelsC2 = new Kernel[16][6];
     private Kernel[][] kernelsC3 = new Kernel[50][16];
 
-    // NUMBER OF NEURONS FOR FULLY CONNECTED LAYERS
-    private int layer5NeuronNo = 50;
-    private int layer6NeuronNo = 20;
-    private int outputNeuronNo = 14;
-
     // WEIGHT MATRICES FOR FULLY CONNECTED LAYERS
     private Matrix weightsFC1 = new Matrix(layer5NeuronNo + 1, layer6NeuronNo);
     private Matrix weightsFC2 = new Matrix(layer6NeuronNo + 1, outputNeuronNo);
+
+    // BOOLEAN ARRAYS THAT TRACK WHICH OF THE ACTIVATIONS FROM C1 AND C2 WERE MAX-POOLED
+    private boolean[][][] C1Max = new boolean[6][dimC1][dimC1];
+    private boolean[][][] C2Max = new boolean[16][dimC2][dimC2];
 
     public CNN_28x28 () {
         initWeights();
@@ -93,20 +100,89 @@ public class CNN_28x28 extends SwingWorker<Double, Void> implements NeuralNetwor
         return inputs;
     }
 
+    Matrix[][] inputs;
+    Matrix targets;
+    private double lR = 0.0001;
+    private int iterationNo = 1;
+    private Double error;
+
     @Override
-    protected Double doInBackground() throws Exception {
-        return null;
+    public void train(Matrix inputVectors, Matrix targets) throws MatrixDimensionMismatchException {
+        this.inputs = preprocessInputVectors(inputVectors);
+        this.targets = targets;
+        this.error = 0.0;
+
+        final ControlPanel controlPanel = ControlPanel.getInstance();
+        controlPanel.updateTrainingProgressBar(0, Strings.CONTROLPANEL_NEURALNETWORK_TRAININGINPROGRESS);
+
+        this.addPropertyChangeListener(new PropertyChangeListener() {
+            public  void propertyChange(PropertyChangeEvent evt) {
+                if ("progress".equals(evt.getPropertyName())) {
+                    controlPanel.updateTrainingProgressBar((Integer)evt.getNewValue(), Strings.CONTROLPANEL_NEURALNETWORK_TRAININGINPROGRESS);
+                }
+            }
+        });
+
+        this.execute();
+    }
+
+    @Override
+    protected Double doInBackground() {
+
+//        int batchSize = inputs.length;
+        int batchSize = 2;
+
+        try {
+            for (int iteration = 0; iteration < iterationNo; iteration++) {
+
+                error = 0.0;
+
+                for (int currentInput = 0; currentInput < batchSize; currentInput++) {
+
+                    // RESET THE MAX-POOL TRACKING ARRAYS
+                    C1Max = new boolean[6][dimC1][dimC1];
+                    C2Max = new boolean[16][dimC2][dimC2];
+
+                    // FORWARD PASS
+                    Matrix[] C1Activations = feedForwardConvolutionLayer(inputs[currentInput], kernelsC1);
+                    Matrix[] S1Activations = feedForwardSubsampleLayer(C1Activations);
+                    Matrix[] C2Activations = feedForwardConvolutionLayer(S1Activations, kernelsC2);
+                    Matrix[] S2Activations = feedForwardSubsampleLayer(C2Activations);
+                    Matrix[] C3Activations = feedForwardConvolutionLayer(S2Activations, kernelsC3);
+                    Matrix FC1Input = flatten(C3Activations);
+                    Matrix FC2Input = feedForwardFullyConnectedLayer1(FC1Input);
+                    Matrix output = feedForwardFullyConnectedLayer2(FC2Input);
+
+                    // CALCULATE ERROR
+                    for (int outputIndex = 0; outputIndex < output.getWidth(); outputIndex++) {
+                        error += Math.pow((output.get(0, outputIndex) - targets.get(currentInput, outputIndex)), 2);
+                    }
+
+                    // CALCULATE ALL DELTA TERMS
+
+
+                    // CALCULATE WEIGHT DELTAS
+
+
+                    // UPDATE WEIGHTS
+                }
+
+                if (iteration % 1 == 0) System.out.println("Squared error: " + error);
+
+                setProgress(100 * iteration / iterationNo);
+            }
+        } catch (MatrixDimensionMismatchException e) {
+            JOptionPane.showMessageDialog(null, e.getMessage());
+        }
+
+        return error;
     }
 
     @Override
     protected void done () {
         ControlPanel controlPanel = ControlPanel.getInstance();
         controlPanel.updateTrainingProgressBar(100, Strings.CONTROLPANEL_NEURALNETWORK_TRAININGCOMPLETE);
-    }
-
-    @Override
-    public double train(Matrix inputVectors, Matrix targets) throws MatrixDimensionMismatchException {
-        return 0;
+        System.out.println("CNN trained with final squared error: " + error);
     }
 
     @Override
@@ -147,25 +223,43 @@ public class CNN_28x28 extends SwingWorker<Double, Void> implements NeuralNetwor
         Matrix[] outputs = new Matrix[inputs.length];
 
         for (int i = 0; i < inputs.length; i++) {
-            outputs[i] = maxPool(inputs[i]);
+            outputs[i] = maxPool(inputs[i], i);
         }
 
         return outputs;
     }
 
     // METHOD FOR MAXPOOLING IN SUBSAMPLING LAYERS OF CNN
-    private Matrix maxPool (Matrix input) {
+    private Matrix maxPool (Matrix input, int featureMapIndex) {
         Matrix result = new Matrix (input.getHeight() / 2, input.getWidth() / 2);
+
+        boolean[][][] maxTrack;
+        if (input.getHeight() == dimC1) maxTrack = C1Max;
+        else maxTrack = C2Max;
 
         for (int row = 0; row < result.getHeight(); row++) {
             for (int col = 0; col < result.getWidth(); col++) {
                 double max = input.get(row * 2, col * 2);
+                int maxRow = row * 2;
+                int maxCol = col * 2;
 
-                if (input.get((row * 2) + 1, col * 2) > max) max = input.get((row * 2) + 1, col * 2);
-                if (input.get(row * 2, (col * 2) + 1) > max) max = input.get(row * 2, (col * 2) + 1);
-                if (input.get((row * 2) + 1, (col * 2) + 1) > max) max = input.get((row * 2) + 1, (col * 2) + 1);
-
+                if (input.get((row * 2) + 1, col * 2) > max) {
+                    max = input.get((row * 2) + 1, col * 2);
+                    maxRow = (row * 2) + 1;
+                    maxCol = col * 2;
+                }
+                if (input.get(row * 2, (col * 2) + 1) > max) {
+                    max = input.get(row * 2, (col * 2) + 1);
+                    maxRow = row * 2;
+                    maxCol = (col * 2) + 1;
+                }
+                if (input.get((row * 2) + 1, (col * 2) + 1) > max) {
+                    max = input.get((row * 2) + 1, (col * 2) + 1);
+                    maxRow = (row * 2) + 1;
+                    maxCol = (col * 2) + 1;
+                }
                 result.set(row, col, max);
+                maxTrack[featureMapIndex][maxRow][maxCol] = true;
             }
         }
 
