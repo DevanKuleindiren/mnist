@@ -9,7 +9,7 @@ import java.io.*;
  * Created by Devan Kuleindiren on 29/08/15.
  */
 
-public class FNN2Layer extends SwingWorker <Double, Void> implements NeuralNetwork {
+public class FNN2Layer implements NeuralNetwork {
 
     public FNN2Layer (int iNN, int hNN, int oNN) {
         inputNodesNo = iNN;
@@ -31,6 +31,11 @@ public class FNN2Layer extends SwingWorker <Double, Void> implements NeuralNetwo
     private Matrix weights1;
     private Matrix weights2;
 
+    public void setWeights (Matrix weights1, Matrix weights2) {
+        this.weights1 = weights1;
+        this.weights2 = weights2;
+    }
+
     // INITIALISE EACH WEIGHT TO A RANDOM VALUE, X, IN THE RANGE -N^(-0.5) < X < N^(-0.5)
     // WHERE N IS THE NUMBER OF NODES IN THE LAYER BEFORE THE WEIGHTS
     private void fillRandom (Matrix matrix, int noOfInputs) {
@@ -47,25 +52,16 @@ public class FNN2Layer extends SwingWorker <Double, Void> implements NeuralNetwo
         fillRandom(weights2, hiddenNeuronNo);
     }
 
-    private Matrix inputVectors;
-    private Matrix targets;
-    private double lR = 0.0001;
-    private int iterationNo = 1000;
-    private Double error;
-
     // TRAIN THE NET USING GIVEN INPUTS & TARGETS, WITH A GIVEN LEARNING RATE AND NUMBER OF ITERATIONS
     @Override
-    public double train (Matrix inputVectors, Matrix targets) throws MatrixDimensionMismatchException {
-        this.inputVectors = inputVectors;
-        this.targets = targets;
-        this.lR = lR;
-        this.iterationNo = iterationNo;
-        this.error = 0.0;
+    public void train (Matrix inputVectors, Matrix targets) throws MatrixDimensionMismatchException {
 
         final ControlPanel controlPanel = ControlPanel.getInstance();
         controlPanel.updateTrainingProgressBar(0, Strings.CONTROLPANEL_NEURALNETWORK_TRAININGINPROGRESS);
 
-        this.addPropertyChangeListener(new PropertyChangeListener() {
+        FNN2Layer_Train fnn2Layer_train = new FNN2Layer_Train(this, weights1, weights2, hiddenNeuronNo, outputNeuronNo, inputVectors, targets);
+
+        fnn2Layer_train.addPropertyChangeListener(new PropertyChangeListener() {
             public  void propertyChange(PropertyChangeEvent evt) {
                 if ("progress".equals(evt.getPropertyName())) {
                     controlPanel.updateTrainingProgressBar((Integer)evt.getNewValue(), Strings.CONTROLPANEL_NEURALNETWORK_TRAININGINPROGRESS);
@@ -73,80 +69,7 @@ public class FNN2Layer extends SwingWorker <Double, Void> implements NeuralNetwo
             }
         });
 
-        this.execute();
-
-        return error;
-    }
-
-    // TRAIN THE NEURAL NETWORK IN A BACKGROUND THREAD, SO THE PROGRESS BAR CAN BE UPDATED
-    @Override
-    protected Double doInBackground () {
-
-        Matrix hiddenActs;
-        Matrix outputActs;
-        error = 0.0;
-
-        // ERROR TERMS FOR CHANGE IN OUTPUT WEIGHTS
-        Matrix deltaO = new Matrix (inputVectors.getHeight(), outputNeuronNo);
-        // ERROR TERMS FOR CHANGE IN HIDDEN WEIGHTS
-        Matrix deltaH = new Matrix (inputVectors.getHeight(), hiddenNeuronNo);
-
-        try {
-            System.out.println("***");
-            for (int i = 0; i < iterationNo; i++) {
-
-                // FEED FORWARD
-                hiddenActs = feedForwardP1(inputVectors);
-                outputActs = feedForwardP2(hiddenActs);
-
-                error = 0.0;
-
-                for (int j = 0; j < inputVectors.getHeight(); j++) {
-                    for (int k = 0; k < outputNeuronNo; k++) {
-                        // COMPUTE ERROR
-                        error += Math.pow((outputActs.get(j, k) - targets.get(j, k)), 2);
-
-                        // COMPUTE ERROR IN THE OUTPUT NEURONS (LOGISTIC)
-                        deltaO.set(j, k, (targets.get(j, k) - outputActs.get(j, k)) * outputActs.get(j, k) * (1 - outputActs.get(j, k)));
-                    }
-                }
-
-                if ((i-1) % 100 == 0) {
-                    System.out.println("% Error: " + (error / (inputVectors.getHeight() * outputNeuronNo)) * 100);
-                }
-
-                // COMPUTE ERROR IN THE HIDDEN NEURONS
-                for (int j = 0; j < inputVectors.getHeight(); j++) {
-                    for (int k = 0; k < hiddenNeuronNo; k++) {
-
-                        double tempWeightErrorSum = 0;
-                        for (int l = 0; l < outputNeuronNo; l++) {
-                            tempWeightErrorSum += weights2.get(k, l) * deltaO.get(j, l);
-                        }
-
-                        deltaH.set(j, k, hiddenActs.get(j, k) * (1 - hiddenActs.get(j, k)) * tempWeightErrorSum);
-                    }
-                }
-
-                // UPDATE WEIGHTS2
-                weights2 = weights2.add((hiddenActs.transpose().multiply(deltaO)).scalarMultiply(lR));
-
-                // UPDATE WEIGHTS1
-                weights1 = weights1.add((inputVectors.transpose().multiply(deltaH)).scalarMultiply(lR));
-
-                setProgress(100 * i / iterationNo);
-            }
-        } catch (MatrixDimensionMismatchException e) {
-            JOptionPane.showMessageDialog(null, e.getMessage());
-        }
-
-        return error;
-    }
-
-    @Override
-    protected void done () {
-        ControlPanel controlPanel = ControlPanel.getInstance();
-        controlPanel.updateTrainingProgressBar(100, Strings.CONTROLPANEL_NEURALNETWORK_TRAININGCOMPLETE);
+        fnn2Layer_train.execute();
     }
 
     // PASS AN ARRAY OF INPUT VECTORS THROUGH THE NEURAL NET

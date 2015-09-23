@@ -8,9 +8,6 @@ import java.io.*;
  */
 public class CNN_28x28 extends SwingWorker<Double, Void> implements NeuralNetwork {
 
-    // THIS CONVOLUTIONAL NEURAL NETWORK HAS A FIXED STRUCTURE
-    final private static int inputNodesNo = 785;
-
     // KERNELS FOR THE CONVOLUTION LAYERS
     private Kernel[][] kernelsC1 = new Kernel[6][1];
     private Kernel[][] kernelsC2 = new Kernel[16][6];
@@ -105,8 +102,8 @@ public class CNN_28x28 extends SwingWorker<Double, Void> implements NeuralNetwor
     }
 
     @Override
-    public double train(Matrix inputVectors, Matrix targets) throws MatrixDimensionMismatchException {
-        return 0;
+    public void train(Matrix inputVectors, Matrix targets) throws MatrixDimensionMismatchException {
+
     }
 
     @Override

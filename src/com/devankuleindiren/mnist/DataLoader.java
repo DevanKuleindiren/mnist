@@ -35,7 +35,7 @@ public class DataLoader {
                 String temp = reader.readLine();
                 String[] values = temp.split(",");
 
-                for (int j = 1; j < values.length; j++) inputs.set(i, j - 1, Double.parseDouble(values[j]) / 255.0);
+                for (int j = 1; j < values.length; j++) inputs.set(i, j - 1, (Double.parseDouble(values[j]) / 255.0) - 1.0);
                 inputs.set(i, 784, -1);
 
                 int target;
