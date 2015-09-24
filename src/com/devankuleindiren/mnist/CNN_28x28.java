@@ -100,8 +100,21 @@ public class CNN_28x28 extends SwingWorker<Double, Void> implements NeuralNetwor
         return inputs;
     }
 
+    // CHANGE THE FORMAT OF THE INPUT VECTORS TO ONE MORE CONVENIENT FOR THE CNN
+    public Matrix[] preprocessTargetVectors (Matrix targetVectors) {
+        Matrix[] targets = new Matrix[targetVectors.getHeight()];
+
+        for (int vector = 0; vector < targetVectors.getHeight(); vector++) {
+            targets[vector] = new Matrix(1, outputNeuronNo);
+            for (int col = 0; col < outputNeuronNo; col++) {
+                targets[vector].set(0, col, targetVectors.get(vector, col));
+            }
+        }
+        return targets;
+    }
+
     Matrix[][] inputs;
-    Matrix targets;
+    Matrix[] targets;
     private double lR = 0.0001;
     private int iterationNo = 1;
     private Double error;
@@ -109,7 +122,7 @@ public class CNN_28x28 extends SwingWorker<Double, Void> implements NeuralNetwor
     @Override
     public void train(Matrix inputVectors, Matrix targets) throws MatrixDimensionMismatchException {
         this.inputs = preprocessInputVectors(inputVectors);
-        this.targets = targets;
+        this.targets = preprocessTargetVectors(targets);
         this.error = 0.0;
 
         final ControlPanel controlPanel = ControlPanel.getInstance();
@@ -153,14 +166,80 @@ public class CNN_28x28 extends SwingWorker<Double, Void> implements NeuralNetwor
                     Matrix FC2Input = feedForwardFullyConnectedLayer1(FC1Input);
                     Matrix output = feedForwardFullyConnectedLayer2(FC2Input);
 
+                    // REMOVE BIAS COLUMNS FOR TRAINING CALCULATIONS
+                    FC2Input = FC2Input.removeBiasCol();
+                    FC1Input = FC1Input.removeBiasCol();
+
                     // CALCULATE ERROR
                     for (int outputIndex = 0; outputIndex < output.getWidth(); outputIndex++) {
-                        error += Math.pow((output.get(0, outputIndex) - targets.get(currentInput, outputIndex)), 2);
+                        error += Math.pow((output.get(0, outputIndex) - targets[currentInput].get(0, outputIndex)), 2);
                     }
 
-                    // CALCULATE ALL DELTA TERMS
+                    // PREPARE ONES MATRICES FOR CALCULATION
+                    Matrix FC2Ones = Matrix.onesMatrix(1, outputNeuronNo);
+                    Matrix FC1Ones = Matrix.onesMatrix(1, layer6NeuronNo);
+                    Matrix C3Ones  = Matrix.onesMatrix(1, layer5NeuronNo);
 
-                    
+                    // CALCULATE ALL DELTA TERMS
+                    Matrix deltaFC2 = output.subtract(targets[currentInput]).multiplyEach(output.multiplyEach(FC2Ones.subtract(output)));
+                    Matrix deltaFC1 = deltaFC2.multiply(weightsFC2.removeBiasRow().transpose()).multiplyEach(FC2Input.multiplyEach(FC1Ones.subtract(FC2Input)));
+                    Matrix deltaC3  = deltaFC1.multiply(weightsFC1.removeBiasRow().transpose()).multiplyEach(FC1Input.multiplyEach(C3Ones.subtract(FC1Input)));
+                    Matrix[] deltaS2 = new Matrix[16];
+                    for (int i = 0; i < deltaS2.length; i++) {
+                        deltaS2[i] = new Matrix(4, 4);
+                        for (int row = 0; row < deltaS2[i].getHeight(); row++) {
+                            for (int col = 0; col < deltaS2[i].getWidth(); col++) {
+                                double newValue = 0;
+                                for (int k = 0; k < deltaC3.getWidth(); k++) {
+                                    newValue += deltaC3.get(0, k) * kernelsC3[k][i].get(row, col);
+                                }
+                                newValue = newValue * (S2Activations[i].get(row, col) * (1 - S2Activations[i].get(row, col)));
+                                deltaS2[i].set(row, col, newValue);
+                            }
+                        }
+                    }
+                    Matrix[] deltaC2 = new Matrix[16];
+                    for (int k = 0; k < deltaC2.length; k++) {
+                        deltaC2[k] = new Matrix(8, 8);
+                        for (int row = 0; row < deltaC2[k].getHeight(); row++) {
+                            for (int col = 0; col < deltaC2[k].getWidth(); col++) {
+                                if (C2Max[k][row][col]) deltaC2[k].set(row, col, deltaS2[k].get(row / 2, col / 2));
+                            }
+                        }
+                    }
+                    Matrix[] deltaS1 = new Matrix[6];
+                    for (int i = 0; i < deltaS1.length; i++) {
+                        deltaS1[i] = new Matrix(12, 12);
+                        for (int row = 0; row < deltaS1[i].getHeight(); row++) {
+                            for (int col = 0; col < deltaS1[i].getWidth(); col++) {
+                                double newValue = 0;
+                                for (int k = 0; k < deltaC2.length; k++) {
+                                    for (int m = 0; m < dimC2 - 1; m++) {
+                                        for (int n = 0; n < dimC2 - 1; n++) {
+                                            if (m <= row
+                                                    && n <= col
+                                                    && m > dimC2
+                                                    && n > dimC2) {
+                                                newValue += deltaC2[k].get(m, n) * kernelsC2[k][i].get(m, n);
+                                            }
+                                        }
+                                    }
+                                }
+                                newValue = newValue * (S1Activations[i].get(row, col) * (1 - S1Activations[i].get(row, col)));
+                                deltaS1[i].set(row, col, newValue);
+                            }
+                        }
+                    }
+                    Matrix[] deltaC1 = new Matrix[6];
+                    for (int k = 0; k < deltaC1.length; k++) {
+                        deltaC1[k] = new Matrix(24, 24);
+                        for (int row = 0; row < deltaC1[k].getHeight(); row++) {
+                            for (int col = 0; col < deltaC1[k].getWidth(); col++) {
+                                if (C1Max[k][row][col]) deltaC1[k].set(row, col, deltaS1[k].get(row / 2, col / 2));
+                            }
+                        }
+                    }
+
                     // CALCULATE WEIGHT DELTAS
 
 

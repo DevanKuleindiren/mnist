@@ -48,6 +48,10 @@ public class Matrix implements Cloneable {
         }
     }
 
+    public Matrix subtract (Matrix toSubtract) throws MatrixDimensionMismatchException {
+        return add(toSubtract.scalarMultiply(-1.0));
+    }
+
     public Matrix multiply (Matrix toMultiply) throws MatrixDimensionMismatchException {
         if (width == toMultiply.height) {
             Matrix result = new Matrix(height, toMultiply.width);
@@ -168,5 +172,38 @@ public class Matrix implements Cloneable {
                 values[row][col] = 1 / (1 + Math.exp(-values[row][col]));
             }
         }
+    }
+
+    // GENERATE A MATRIX FULL OF 1s
+    public static Matrix onesMatrix (int height, int width) {
+        Matrix result = new Matrix(height, width);
+        for (int row = 0; row < height; row++) {
+            for (int col = 0; col < width; col++) {
+                result.set(row, col, 1);
+            }
+        }
+        return result;
+    }
+
+    // REMOVE THE COLUMN OF BIAS WEIGHTS
+    public Matrix removeBiasCol () {
+        Matrix result = new Matrix(height, width - 1);
+        for (int row = 0; row < height; row++) {
+            for (int col = 0; col < width - 1; col++) {
+                result.values[row][col] = values[row][col];
+            }
+        }
+        return result;
+    }
+
+    // REMOVE THE ROW OF BIAS WEIGHTS
+    public Matrix removeBiasRow () {
+        Matrix result = new Matrix(height - 1, width);
+        for (int row = 0; row < height - 1; row++) {
+            for (int col = 0; col < width; col++) {
+                result.values[row][col] = values[row][col];
+            }
+        }
+        return result;
     }
 }
