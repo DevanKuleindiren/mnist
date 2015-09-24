@@ -150,7 +150,36 @@ public class CNN_28x28 extends SwingWorker<Double, Void> implements NeuralNetwor
 
                 error = 0.0;
 
-                // INITIALISE THE WEIGHT DELTAS
+                // STORE WEIGHT DELTAS
+                Matrix dWFC2 = new Matrix(layer6NeuronNo + 1, outputNeuronNo);
+                Matrix dWFC1 = new Matrix(layer5NeuronNo + 1, layer6NeuronNo);
+                Kernel[][] dWC3 = new Kernel[50][16];
+                Kernel[][] dWC2 = new Kernel[16][6];
+                Kernel[][] dWC1 = new Kernel[6][1];
+
+                // STORE PREVIOUS WEIGHT DELTAS
+                Matrix dWFC2Prev = (Matrix) dWFC2.clone();
+                Matrix dWFC1Prev = (Matrix) dWFC1.clone();
+                Kernel[][] dWC3Prev = new Kernel[50][16];
+                for (int k = 0; k < dWC3Prev.length; k++) {
+                    for (int x = 0; x < dWC3Prev[k].length; x++) {
+                        dWC3Prev[k][x] = (Kernel) dWC3[k][x].clone();
+                    }
+                }
+                Kernel[][] dWC2Prev = new Kernel[16][6];
+                for (int k = 0; k < dWC2Prev.length; k++) {
+                    for (int x = 0; x < dWC2Prev[k].length; x++) {
+                        dWC2Prev[k][x] = (Kernel) dWC2[k][x].clone();
+                    }
+                }
+                Kernel[][] dWC1Prev = new Kernel[6][1];
+                for (int k = 0; k < dWC1Prev.length; k++) {
+                    for (int x = 0; x < dWC1Prev[k].length; x++) {
+                        dWC1Prev[k][x] = (Kernel) dWC1[k][x].clone();
+                    }
+                }
+
+                // INITIALISE THE ERROR GRADIENTS
                 Matrix dEdWFC2 = new Matrix(layer6NeuronNo + 1, outputNeuronNo);
                 Matrix dEdWFC1 = new Matrix(layer5NeuronNo + 1, layer6NeuronNo);
                 Kernel[][] dEdWC3 = new Kernel[50][16];
@@ -247,7 +276,7 @@ public class CNN_28x28 extends SwingWorker<Double, Void> implements NeuralNetwor
                         }
                     }
 
-                    // CALCULATE THE WEIGHT DELTAS
+                    // CALCULATE THE ERROR GRADIENTS
                     dEdWFC2 = dEdWFC2.add(FC2Input.transpose().multiply(deltaFC2));
                     dEdWFC1 = dEdWFC1.add(FC1Input.transpose().multiply(deltaFC1));
                     for (int k = 0; k < kernelsC3.length; k++) {
@@ -284,6 +313,7 @@ public class CNN_28x28 extends SwingWorker<Double, Void> implements NeuralNetwor
                                             newValue += deltaC1[k].get(i, j) * inputs[currentInput][x].get(i + row, j + col);
                                         }
                                     }
+                                    dEdWC1[k][x].set(row, col, newValue);
                                 }
                             }
                         }

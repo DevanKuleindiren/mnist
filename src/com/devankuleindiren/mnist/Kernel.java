@@ -3,7 +3,7 @@ package com.devankuleindiren.mnist;
 /**
  * Created by Devan Kuleindiren on 21/09/15.
  */
-public class Kernel extends Matrix {
+public class Kernel extends Matrix implements Cloneable {
 
     private double biasWeight;
 
@@ -37,5 +37,13 @@ public class Kernel extends Matrix {
         } else {
             throw new MatrixDimensionMismatchException("image convolution");
         }
+    }
+
+    @Override
+    public Object clone () {
+        Kernel clone = (Kernel) super.clone();
+        clone.biasWeight = this.biasWeight;
+
+        return clone;
     }
 }
