@@ -150,6 +150,13 @@ public class CNN_28x28 extends SwingWorker<Double, Void> implements NeuralNetwor
 
                 error = 0.0;
 
+                // INITIALISE THE WEIGHT DELTAS
+                Matrix dEdWFC2 = new Matrix(layer6NeuronNo + 1, outputNeuronNo);
+                Matrix dEdWFC1 = new Matrix(layer5NeuronNo + 1, layer6NeuronNo);
+                Kernel[][] dEdWC3 = new Kernel[50][16];
+                Kernel[][] dEdWC2 = new Kernel[16][6];
+                Kernel[][] dEdWC1 = new Kernel[6][1];
+
                 for (int currentInput = 0; currentInput < batchSize; currentInput++) {
 
                     // RESET THE MAX-POOL TRACKING ARRAYS
@@ -167,8 +174,8 @@ public class CNN_28x28 extends SwingWorker<Double, Void> implements NeuralNetwor
                     Matrix output = feedForwardFullyConnectedLayer2(FC2Input);
 
                     // REMOVE BIAS COLUMNS FOR TRAINING CALCULATIONS
-                    FC2Input = FC2Input.removeBiasCol();
-                    FC1Input = FC1Input.removeBiasCol();
+                    Matrix FC2InputNoBias = FC2Input.removeBiasCol();
+                    Matrix FC1InputNoBias = FC1Input.removeBiasCol();
 
                     // CALCULATE ERROR
                     for (int outputIndex = 0; outputIndex < output.getWidth(); outputIndex++) {
@@ -182,19 +189,19 @@ public class CNN_28x28 extends SwingWorker<Double, Void> implements NeuralNetwor
 
                     // CALCULATE ALL DELTA TERMS
                     Matrix deltaFC2 = output.subtract(targets[currentInput]).multiplyEach(output.multiplyEach(FC2Ones.subtract(output)));
-                    Matrix deltaFC1 = deltaFC2.multiply(weightsFC2.removeBiasRow().transpose()).multiplyEach(FC2Input.multiplyEach(FC1Ones.subtract(FC2Input)));
-                    Matrix deltaC3  = deltaFC1.multiply(weightsFC1.removeBiasRow().transpose()).multiplyEach(FC1Input.multiplyEach(C3Ones.subtract(FC1Input)));
+                    Matrix deltaFC1 = deltaFC2.multiply(weightsFC2.removeBiasRow().transpose()).multiplyEach(FC2InputNoBias.multiplyEach(FC1Ones.subtract(FC2InputNoBias)));
+                    Matrix deltaC3  = deltaFC1.multiply(weightsFC1.removeBiasRow().transpose()).multiplyEach(FC1InputNoBias.multiplyEach(C3Ones.subtract(FC1InputNoBias)));
                     Matrix[] deltaS2 = new Matrix[16];
-                    for (int i = 0; i < deltaS2.length; i++) {
-                        deltaS2[i] = new Matrix(4, 4);
-                        for (int row = 0; row < deltaS2[i].getHeight(); row++) {
-                            for (int col = 0; col < deltaS2[i].getWidth(); col++) {
+                    for (int x = 0; x < deltaS2.length; x++) {
+                        deltaS2[x] = new Matrix(4, 4);
+                        for (int row = 0; row < deltaS2[x].getHeight(); row++) {
+                            for (int col = 0; col < deltaS2[x].getWidth(); col++) {
                                 double newValue = 0;
                                 for (int k = 0; k < deltaC3.getWidth(); k++) {
-                                    newValue += deltaC3.get(0, k) * kernelsC3[k][i].get(row, col);
+                                    newValue += deltaC3.get(0, k) * kernelsC3[k][x].get(row, col);
                                 }
-                                newValue = newValue * (S2Activations[i].get(row, col) * (1 - S2Activations[i].get(row, col)));
-                                deltaS2[i].set(row, col, newValue);
+                                newValue = newValue * (S2Activations[x].get(row, col) * (1 - S2Activations[x].get(row, col)));
+                                deltaS2[x].set(row, col, newValue);
                             }
                         }
                     }
@@ -208,25 +215,25 @@ public class CNN_28x28 extends SwingWorker<Double, Void> implements NeuralNetwor
                         }
                     }
                     Matrix[] deltaS1 = new Matrix[6];
-                    for (int i = 0; i < deltaS1.length; i++) {
-                        deltaS1[i] = new Matrix(12, 12);
-                        for (int row = 0; row < deltaS1[i].getHeight(); row++) {
-                            for (int col = 0; col < deltaS1[i].getWidth(); col++) {
+                    for (int x = 0; x < deltaS1.length; x++) {
+                        deltaS1[x] = new Matrix(12, 12);
+                        for (int row = 0; row < deltaS1[x].getHeight(); row++) {
+                            for (int col = 0; col < deltaS1[x].getWidth(); col++) {
                                 double newValue = 0;
                                 for (int k = 0; k < deltaC2.length; k++) {
-                                    for (int m = 0; m < dimC2 - 1; m++) {
-                                        for (int n = 0; n < dimC2 - 1; n++) {
+                                    for (int m = 0; m < dimC2; m++) {
+                                        for (int n = 0; n < dimC2; n++) {
                                             if (m <= row
+                                                    && row < m + dimC2
                                                     && n <= col
-                                                    && m > dimC2
-                                                    && n > dimC2) {
-                                                newValue += deltaC2[k].get(m, n) * kernelsC2[k][i].get(m, n);
+                                                    && col < n + dimC2) {
+                                                newValue += deltaC2[k].get(m, n) * kernelsC2[k][x].get(m, n);
                                             }
                                         }
                                     }
                                 }
-                                newValue = newValue * (S1Activations[i].get(row, col) * (1 - S1Activations[i].get(row, col)));
-                                deltaS1[i].set(row, col, newValue);
+                                newValue = newValue * (S1Activations[x].get(row, col) * (1 - S1Activations[x].get(row, col)));
+                                deltaS1[x].set(row, col, newValue);
                             }
                         }
                     }
@@ -240,11 +247,50 @@ public class CNN_28x28 extends SwingWorker<Double, Void> implements NeuralNetwor
                         }
                     }
 
-                    // CALCULATE WEIGHT DELTAS
-
-
-                    // UPDATE WEIGHTS
+                    // CALCULATE THE WEIGHT DELTAS
+                    dEdWFC2 = dEdWFC2.add(FC2Input.transpose().multiply(deltaFC2));
+                    dEdWFC1 = dEdWFC1.add(FC1Input.transpose().multiply(deltaFC1));
+                    for (int k = 0; k < kernelsC3.length; k++) {
+                        for (int x = 0; x < kernelsC3[k].length; x++) {
+                            for (int row = 0; row < kernelsC3[k][x].getHeight(); row++) {
+                                for (int col = 0; col < kernelsC3[k][x].getWidth(); col++) {
+                                    dEdWC3[k][x].set(row, col, deltaC3.get(0, k) * S2Activations[x].get(row, col));
+                                }
+                            }
+                        }
+                    }
+                    for (int k = 0; k < kernelsC2.length; k++) {
+                        for (int x = 0; x < kernelsC2[k].length; x++) {
+                            for (int row = 0; row < kernelsC2[k][x].getHeight(); row++) {
+                                for (int col = 0; col < kernelsC2[k][x].getWidth(); col++) {
+                                    double newValue = 0;
+                                    for (int i = 0; i < dimC2; i++) {
+                                        for (int j = 0; j < dimC2; j++) {
+                                            newValue += deltaC2[k].get(i, j) * S1Activations[x].get(i + row, j + col);
+                                        }
+                                    }
+                                    dEdWC2[k][x].set(row, col, newValue);
+                                }
+                            }
+                        }
+                    }
+                    for (int k = 0; k < kernelsC1.length; k++) {
+                        for (int x = 0; x < kernelsC1[k].length; x++) {
+                            for (int row = 0; row < kernelsC1[k][x].getHeight(); row++) {
+                                for (int col = 0; col < kernelsC1[k][x].getWidth(); col++) {
+                                    double newValue = 0;
+                                    for (int i = 0; i < dimC1; i++) {
+                                        for (int j = 0; j < dimC1; j++) {
+                                            newValue += deltaC1[k].get(i, j) * inputs[currentInput][x].get(i + row, j + col);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
+
+                // UPDATE WEIGHTS
 
                 if (iteration % 1 == 0) System.out.println("Squared error: " + error);
 
