@@ -26,16 +26,4 @@ public class Diagnostics {
         System.out.print("\n");
     }
 
-    public static void printKernelPretty (Kernel kernel, String label) {
-        System.out.print("\n");
-        System.out.println("KERNEL: " + label);
-        for (int row = 0; row < kernel.getHeight(); row++) {
-            for (int col = 0; col < kernel.getWidth(); col++) {
-                System.out.printf("%.3f, ", kernel.get(row, col));
-            }
-            System.out.print("\n");
-        }
-        System.out.print("\n");
-    }
-
 }

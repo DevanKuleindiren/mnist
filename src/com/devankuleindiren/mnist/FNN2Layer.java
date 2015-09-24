@@ -106,7 +106,7 @@ public class FNN2Layer extends SwingWorker <Double, Void> implements NeuralNetwo
                 }
 
                 if (iteration % 10 == 0) {
-                    System.out.println("Squared error: " + (error / (inputVectors.getHeight() * outputNeuronNo)) * 100);
+                    System.out.println("Error measure: " + (error / (inputVectors.getHeight() * outputNeuronNo)) * 100);
                 }
 
                 // COMPUTE ERROR IN THE HIDDEN NEURONS
@@ -141,7 +141,6 @@ public class FNN2Layer extends SwingWorker <Double, Void> implements NeuralNetwo
     protected void done () {
         ControlPanel controlPanel = ControlPanel.getInstance();
         controlPanel.updateTrainingProgressBar(100, Strings.CONTROLPANEL_NEURALNETWORK_TRAININGCOMPLETE);
-        System.out.println("FNN trained with final squared error: " + error);
     }
 
     // PASS AN ARRAY OF INPUT VECTORS THROUGH THE NEURAL NET

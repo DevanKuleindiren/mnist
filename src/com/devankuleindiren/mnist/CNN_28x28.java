@@ -20,9 +20,9 @@ public class CNN_28x28 extends SwingWorker<Double, Void> implements NeuralNetwor
     private int dimC2 = 8;
 
     // KERNELS FOR THE CONVOLUTION LAYERS
-    private Kernel[][] kernelsC1 = new Kernel[6][1];
-    private Kernel[][] kernelsC2 = new Kernel[16][6];
-    private Kernel[][] kernelsC3 = new Kernel[50][16];
+    private Matrix[][] kernelsC1 = new Matrix[6][1];
+    private Matrix[][] kernelsC2 = new Matrix[16][6];
+    private Matrix[][] kernelsC3 = new Matrix[50][16];
 
     // WEIGHT MATRICES FOR FULLY CONNECTED LAYERS
     private Matrix weightsFC1 = new Matrix(layer5NeuronNo + 1, layer6NeuronNo);
@@ -54,7 +54,7 @@ public class CNN_28x28 extends SwingWorker<Double, Void> implements NeuralNetwor
     }
 
     // INITIALISE EACH KERNEL VALUE TO A RANDOM VALUE BETWEEN +bound AND -bound
-    private void fillKernel (Kernel kernel, double bound) {
+    private void fillKernel (Matrix kernel, double bound) {
         for (int row = 0; row < kernel.getHeight(); row++) {
             for (int col = 0; col < kernel.getWidth(); col++) {
                 kernel.set(row, col, (Math.random() * 2 * bound) - bound);
@@ -67,19 +67,19 @@ public class CNN_28x28 extends SwingWorker<Double, Void> implements NeuralNetwor
     private void initKernels () {
         for (int kernel = 0; kernel < kernelsC1.length; kernel++) {
             for (int input = 0; input < kernelsC1[kernel].length; input++) {
-                kernelsC1[kernel][input] = new Kernel(5, 5);
+                kernelsC1[kernel][input] = new Matrix(5, 5);
                 fillKernel(kernelsC1[kernel][input], 0.1);
             }
         }
         for (int kernel = 0; kernel < kernelsC2.length; kernel++) {
             for (int input = 0; input < kernelsC2[kernel].length; input++) {
-                kernelsC2[kernel][input] = new Kernel(5, 5);
+                kernelsC2[kernel][input] = new Matrix(5, 5);
                 fillKernel(kernelsC2[kernel][input], 0.1);
             }
         }
         for (int kernel = 0; kernel < kernelsC3.length; kernel++) {
             for (int input = 0; input < kernelsC3[kernel].length; input++) {
-                kernelsC3[kernel][input] = new Kernel(4, 4);
+                kernelsC3[kernel][input] = new Matrix(4, 4);
                 fillKernel(kernelsC3[kernel][input], 0.1);
             }
         }
@@ -116,7 +116,8 @@ public class CNN_28x28 extends SwingWorker<Double, Void> implements NeuralNetwor
     Matrix[][] inputs;
     Matrix[] targets;
     private double lR = 0.0001;
-    private int iterationNo = 1;
+    private double momentum = 0.1;
+    private int iterationNo = 10;
     private Double error;
 
     @Override
@@ -142,49 +143,71 @@ public class CNN_28x28 extends SwingWorker<Double, Void> implements NeuralNetwor
     @Override
     protected Double doInBackground() {
 
-//        int batchSize = inputs.length;
-        int batchSize = 2;
+        int batchSize = inputs.length;
 
         try {
+
+            // STORE WEIGHT DELTAS
+            Matrix dWFC2 = new Matrix(layer6NeuronNo + 1, outputNeuronNo);
+            Matrix dWFC1 = new Matrix(layer5NeuronNo + 1, layer6NeuronNo);
+            Matrix[][] dWC3 = new Matrix[50][16];
+            Matrix[][] dWC2 = new Matrix[16][6];
+            Matrix[][] dWC1 = new Matrix[6][1];
+
+            for (int k = 0; k < dWC3.length; k++) {
+                for (int x = 0; x < dWC3[k].length; x++) {
+                    dWC3[k][x] = new Matrix(4, 4);
+                }
+            }
+            for (int k = 0; k < dWC2.length; k++) {
+                for (int x = 0; x < dWC2[k].length; x++) {
+                    dWC2[k][x] = new Matrix(5, 5);
+                }
+            }
+            for (int k = 0; k < dWC1.length; k++) {
+                for (int x = 0; x < dWC1[k].length; x++) {
+                    dWC1[k][x] = new Matrix(5, 5);
+                }
+            }
+
             for (int iteration = 0; iteration < iterationNo; iteration++) {
 
                 error = 0.0;
 
-                // STORE WEIGHT DELTAS
-                Matrix dWFC2 = new Matrix(layer6NeuronNo + 1, outputNeuronNo);
-                Matrix dWFC1 = new Matrix(layer5NeuronNo + 1, layer6NeuronNo);
-                Kernel[][] dWC3 = new Kernel[50][16];
-                Kernel[][] dWC2 = new Kernel[16][6];
-                Kernel[][] dWC1 = new Kernel[6][1];
-
                 // STORE PREVIOUS WEIGHT DELTAS
                 Matrix dWFC2Prev = (Matrix) dWFC2.clone();
                 Matrix dWFC1Prev = (Matrix) dWFC1.clone();
-                Kernel[][] dWC3Prev = new Kernel[50][16];
-                for (int k = 0; k < dWC3Prev.length; k++) {
-                    for (int x = 0; x < dWC3Prev[k].length; x++) {
-                        dWC3Prev[k][x] = (Kernel) dWC3[k][x].clone();
-                    }
-                }
-                Kernel[][] dWC2Prev = new Kernel[16][6];
-                for (int k = 0; k < dWC2Prev.length; k++) {
-                    for (int x = 0; x < dWC2Prev[k].length; x++) {
-                        dWC2Prev[k][x] = (Kernel) dWC2[k][x].clone();
-                    }
-                }
-                Kernel[][] dWC1Prev = new Kernel[6][1];
-                for (int k = 0; k < dWC1Prev.length; k++) {
-                    for (int x = 0; x < dWC1Prev[k].length; x++) {
-                        dWC1Prev[k][x] = (Kernel) dWC1[k][x].clone();
-                    }
-                }
+                Matrix[][] dWC3Prev = new Matrix[50][16];
+                Matrix[][] dWC2Prev = new Matrix[16][6];
+                Matrix[][] dWC1Prev = new Matrix[6][1];
 
                 // INITIALISE THE ERROR GRADIENTS
                 Matrix dEdWFC2 = new Matrix(layer6NeuronNo + 1, outputNeuronNo);
                 Matrix dEdWFC1 = new Matrix(layer5NeuronNo + 1, layer6NeuronNo);
-                Kernel[][] dEdWC3 = new Kernel[50][16];
-                Kernel[][] dEdWC2 = new Kernel[16][6];
-                Kernel[][] dEdWC1 = new Kernel[6][1];
+                Matrix[][] dEdWC3 = new Matrix[50][16];
+                Matrix[][] dEdWC2 = new Matrix[16][6];
+                Matrix[][] dEdWC1 = new Matrix[6][1];
+
+                for (int k = 0; k < dWC3Prev.length; k++) {
+                    for (int x = 0; x < dWC3Prev[k].length; x++) {
+                        dWC3Prev[k][x] = (Matrix) dWC3[k][x].clone();
+                        dEdWC3[k][x] = new Matrix(4, 4);
+                    }
+                }
+
+                for (int k = 0; k < dWC2Prev.length; k++) {
+                    for (int x = 0; x < dWC2Prev[k].length; x++) {
+                        dWC2Prev[k][x] = (Matrix) dWC2[k][x].clone();
+                        dEdWC2[k][x] = new Matrix(5, 5);
+                    }
+                }
+
+                for (int k = 0; k < dWC1Prev.length; k++) {
+                    for (int x = 0; x < dWC1Prev[k].length; x++) {
+                        dWC1Prev[k][x] = (Matrix) dWC1[k][x].clone();
+                        dEdWC1[k][x] = new Matrix(5, 5);
+                    }
+                }
 
                 for (int currentInput = 0; currentInput < batchSize; currentInput++) {
 
@@ -283,9 +306,10 @@ public class CNN_28x28 extends SwingWorker<Double, Void> implements NeuralNetwor
                         for (int x = 0; x < kernelsC3[k].length; x++) {
                             for (int row = 0; row < kernelsC3[k][x].getHeight(); row++) {
                                 for (int col = 0; col < kernelsC3[k][x].getWidth(); col++) {
-                                    dEdWC3[k][x].set(row, col, deltaC3.get(0, k) * S2Activations[x].get(row, col));
+                                    dEdWC3[k][x].inc(row, col, deltaC3.get(0, k) * S2Activations[x].get(row, col));
                                 }
                             }
+                            dEdWC3[k][x].incBiasWeight(deltaC3.get(0, k) * -1);
                         }
                     }
                     for (int k = 0; k < kernelsC2.length; k++) {
@@ -298,9 +322,16 @@ public class CNN_28x28 extends SwingWorker<Double, Void> implements NeuralNetwor
                                             newValue += deltaC2[k].get(i, j) * S1Activations[x].get(i + row, j + col);
                                         }
                                     }
-                                    dEdWC2[k][x].set(row, col, newValue);
+                                    dEdWC2[k][x].inc(row, col, newValue);
                                 }
                             }
+                            double newBiasGrad = 0;
+                            for (int i = 0; i < dimC2; i++) {
+                                for (int j = 0; j < dimC2; j++) {
+                                    newBiasGrad += deltaC2[k].get(i, j) * -1;
+                                }
+                            }
+                            dEdWC2[k][x].incBiasWeight(newBiasGrad);
                         }
                     }
                     for (int k = 0; k < kernelsC1.length; k++) {
@@ -313,21 +344,54 @@ public class CNN_28x28 extends SwingWorker<Double, Void> implements NeuralNetwor
                                             newValue += deltaC1[k].get(i, j) * inputs[currentInput][x].get(i + row, j + col);
                                         }
                                     }
-                                    dEdWC1[k][x].set(row, col, newValue);
+                                    dEdWC1[k][x].inc(row, col, newValue);
                                 }
                             }
+                            double newBiasGrad = 0;
+                            for (int i = 0; i < dimC1; i++) {
+                                for (int j = 0; j < dimC1; j++) {
+                                    newBiasGrad += deltaC1[k].get(i, j) * -1;
+                                }
+                            }
+                            dEdWC1[k][x].incBiasWeight(newBiasGrad);
                         }
                     }
                 }
 
-                // UPDATE WEIGHTS
+                // CALCULATE WEIGHT DELTAS AND UPDATE WEIGHTS
+                dWFC2 = dWFC2Prev.scalarMultiply(momentum).subtract(dEdWFC2.scalarMultiply(lR));
+                weightsFC2 = weightsFC2.add(dWFC2);
 
-                if (iteration % 1 == 0) System.out.println("Squared error: " + error);
+                dWFC1 = dWFC1Prev.scalarMultiply(momentum).subtract(dEdWFC1.scalarMultiply(lR));
+                weightsFC1 = weightsFC1.add(dWFC1);
+
+                for (int k = 0; k < dWC3.length; k++) {
+                    for (int x = 0; x < dWC3[k].length; x++) {
+                        dWC3[k][x] = dWC3Prev[k][x].scalarMultiply(momentum).subtract(dEdWC3[k][x].scalarMultiply(lR));
+                        kernelsC3[k][x] = kernelsC3[k][x].add(dWC3[k][x]);
+                    }
+                }
+                for (int k = 0; k < dWC2.length; k++) {
+                    for (int x = 0; x < dWC2[k].length; x++) {
+                        dWC2[k][x] = dWC2Prev[k][x].scalarMultiply(momentum).subtract(dEdWC2[k][x].scalarMultiply(lR));
+                        kernelsC2[k][x] = kernelsC2[k][x].add(dWC2[k][x]);
+                    }
+                }
+                for (int k = 0; k < dWC1.length; k++) {
+                    for (int x = 0; x < dWC1[k].length; x++) {
+                        dWC1[k][x] = dWC1Prev[k][x].scalarMultiply(momentum).subtract(dEdWC1[k][x].scalarMultiply(lR));
+                        kernelsC1[k][x] = kernelsC1[k][x].add(dWC1[k][x]);
+                    }
+                }
+
+                if (iteration % 1 == 0) System.out.println("Error measure: " + (error / (batchSize * outputNeuronNo)) * 100);
 
                 setProgress(100 * iteration / iterationNo);
             }
         } catch (MatrixDimensionMismatchException e) {
             JOptionPane.showMessageDialog(null, e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
         return error;
@@ -337,7 +401,6 @@ public class CNN_28x28 extends SwingWorker<Double, Void> implements NeuralNetwor
     protected void done () {
         ControlPanel controlPanel = ControlPanel.getInstance();
         controlPanel.updateTrainingProgressBar(100, Strings.CONTROLPANEL_NEURALNETWORK_TRAININGCOMPLETE);
-        System.out.println("CNN trained with final squared error: " + error);
     }
 
     @Override
@@ -356,7 +419,7 @@ public class CNN_28x28 extends SwingWorker<Double, Void> implements NeuralNetwor
     }
 
     // PERFORM A FOWARD PASS THROUGH A CONVOLUTIONAL LAYER IN WHICH KERNELS APPLY ALL INPUTS
-    private Matrix[] feedForwardConvolutionLayer (Matrix[] inputs, Kernel[][] kernels) throws MatrixDimensionMismatchException {
+    private Matrix[] feedForwardConvolutionLayer (Matrix[] inputs, Matrix[][] kernels) throws MatrixDimensionMismatchException {
         Matrix[] outputs = new Matrix[kernels.length];
 
         // APPLY CONVOLUTIONS
@@ -452,25 +515,25 @@ public class CNN_28x28 extends SwingWorker<Double, Void> implements NeuralNetwor
         BufferedReader bufferedReader = new BufferedReader(new FileReader(source));
 
         // READ EACH OF THE C1 KERNELS
-        for (Kernel[] ks : kernelsC1) {
-            for (Kernel k : ks) readKernel(k, bufferedReader);
+        for (Matrix[] ks : kernelsC1) {
+            for (Matrix k : ks) readWeights(k, bufferedReader, true);
         }
 
         // READ EACH OF THE C2 KERNELS
-        for (Kernel[] ks : kernelsC2) {
-            for (Kernel k : ks) readKernel(k, bufferedReader);
+        for (Matrix[] ks : kernelsC2) {
+            for (Matrix k : ks) readWeights(k, bufferedReader, true);
         }
 
         // READ EACH OF THE C3 KERNELS
-        for (Kernel[] ks : kernelsC3) {
-            for (Kernel k : ks) readKernel(k, bufferedReader);
+        for (Matrix[] ks : kernelsC3) {
+            for (Matrix k : ks) readWeights(k, bufferedReader, true);
         }
 
         // READ THE FC1 WEIGHTS
-        readWeights(weightsFC1, bufferedReader);
+        readWeights(weightsFC1, bufferedReader, false);
 
         // READ THE FC2 WEIGHTS
-        readWeights(weightsFC2, bufferedReader);
+        readWeights(weightsFC2, bufferedReader, false);
 
         bufferedReader.close();
         JOptionPane.showMessageDialog(null, "Loaded weights from " + source);
@@ -481,65 +544,41 @@ public class CNN_28x28 extends SwingWorker<Double, Void> implements NeuralNetwor
         BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(destination, false));
 
         // WRITE EACH OF THE C1 KERNELS
-        for (Kernel[] ks : kernelsC1) {
-            for (Kernel k : ks) writeKernel(k, bufferedWriter);
+        for (Matrix[] ks : kernelsC1) {
+            for (Matrix k : ks) writeWeights(k, bufferedWriter, true);
         }
 
         // WRITE EACH OF THE C2 KERNELS
-        for (Kernel[] ks : kernelsC2) {
-            for (Kernel k : ks) writeKernel(k, bufferedWriter);
+        for (Matrix[] ks : kernelsC2) {
+            for (Matrix k : ks) writeWeights(k, bufferedWriter, true);
         }
 
         // WRITE EACH OF THE C3 KERNELS
-        for (Kernel[] ks : kernelsC3) {
-            for (Kernel k : ks) writeKernel(k, bufferedWriter);
+        for (Matrix[] ks : kernelsC3) {
+            for (Matrix k : ks) writeWeights(k, bufferedWriter, true);
         }
 
         // WRITE THE FC1 WEIGHTS
-        writeWeights(weightsFC1, bufferedWriter);
-        bufferedWriter.write("\n");
+        writeWeights(weightsFC1, bufferedWriter, false);
 
         // WRITE THE FC2 WEIGHTS
-        writeWeights(weightsFC2, bufferedWriter);
+        writeWeights(weightsFC2, bufferedWriter, false);
 
         bufferedWriter.close();
         JOptionPane.showMessageDialog(null, "Saved weights to " + destination);
     }
 
-    private void writeKernel (Kernel kernel, BufferedWriter bufferedWriter) throws IOException {
-        for (int row = 0; row < kernel.getHeight(); row++) {
-            for (int col = 0; col < kernel.getWidth(); col++) {
-                bufferedWriter.write(Double.toString(kernel.get(row, col)) + ",");
-            }
-        }
-        bufferedWriter.write(Double.toString(kernel.getBiasWeight()));
-        bufferedWriter.write("\n");
-    }
-
-    private void readKernel (Kernel kernel, BufferedReader bufferedReader) throws IOException, InvalidWeightFormatException {
-        try {
-            String kernelString = bufferedReader.readLine();
-            String[] kernelArray = kernelString.split(",");
-            for (int row = 0; row < kernel.getHeight(); row++) {
-                for (int col = 0; col < kernel.getWidth(); col++) {
-                    kernel.set(row, col, Double.parseDouble(kernelArray[(row * kernel.getWidth()) + col]));
-                }
-            }
-            kernel.setBiasWeight(Double.parseDouble(kernelArray[kernel.getHeight() * kernel.getWidth()]));
-        } catch (ArrayIndexOutOfBoundsException e) {
-            throw new InvalidWeightFormatException("A kernel in the file is incorrectly formatted.");
-        }
-    }
-
-    private void writeWeights (Matrix weights, BufferedWriter bufferedWriter) throws IOException {
+    private void writeWeights (Matrix weights, BufferedWriter bufferedWriter, boolean isKernel) throws IOException {
         for (int row = 0; row < weights.getHeight(); row++) {
             for (int col = 0; col < weights.getWidth(); col++) {
                 bufferedWriter.write(Double.toString(weights.get(row, col)) + ",");
             }
         }
+        if (isKernel) bufferedWriter.write(Double.toString(weights.getBiasWeight()));
+        bufferedWriter.write("\n");
     }
 
-    private void readWeights (Matrix weights, BufferedReader bufferedReader) throws IOException, InvalidWeightFormatException {
+    private void readWeights (Matrix weights, BufferedReader bufferedReader, boolean isKernel) throws IOException, InvalidWeightFormatException {
         try {
             String weightString = bufferedReader.readLine();
             String[] weightArray = weightString.split(",");
@@ -548,8 +587,9 @@ public class CNN_28x28 extends SwingWorker<Double, Void> implements NeuralNetwor
                     weights.set(row, col, Double.parseDouble(weightArray[(row * weights.getWidth()) + col]));
                 }
             }
+            if (isKernel) weights.setBiasWeight(Double.parseDouble(weightArray[weights.getHeight() * weights.getWidth()]));
         } catch (ArrayIndexOutOfBoundsException e) {
-            throw new InvalidWeightFormatException("A weight matrix in the file is incorrectly formatted.");
+            throw new InvalidWeightFormatException("A matrix in the file is incorrectly formatted.");
         }
     }
 }

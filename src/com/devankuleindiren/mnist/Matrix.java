@@ -8,6 +8,7 @@ public class Matrix implements Cloneable {
     private int height;
     private int width;
     protected double[][] values;
+    private double biasWeight;
 
     public Matrix (int height, int width) {
         this.height = height;
@@ -16,10 +17,11 @@ public class Matrix implements Cloneable {
     }
 
     public int getHeight () { return height; }
-    public int getWidth () {
-        return width;
-    }
+    public int getWidth () { return width; }
     public double[][] getValues () { return values; }
+    public double getBiasWeight () { return biasWeight; }
+    public void setBiasWeight (double newWeight) { biasWeight = newWeight; }
+    public void incBiasWeight (double diff) { biasWeight += diff; }
 
     public double get (int row, int col) {
         if (row >= 0 && row < height && col >= 0 && col < width) {
@@ -34,6 +36,12 @@ public class Matrix implements Cloneable {
         }
     }
 
+    public void inc (int row, int col, double diff) {
+        if (row >= 0 && row < height && col >= 0 && col < width) {
+            values[row][col] += diff;
+        }
+    }
+
     public Matrix add (Matrix toAdd) throws MatrixDimensionMismatchException {
         if (height == toAdd.height && width == toAdd.width) {
             Matrix result = new Matrix(height, width);
@@ -42,6 +50,7 @@ public class Matrix implements Cloneable {
                     result.values[row][col] = values[row][col] + toAdd.values[row][col];
                 }
             }
+            result.biasWeight = this.biasWeight + toAdd.biasWeight;
             return result;
         } else {
             throw new MatrixDimensionMismatchException("addition");
@@ -78,6 +87,7 @@ public class Matrix implements Cloneable {
                     result.values[row][col] = values[row][col] * toMultiply.values[row][col];
                 }
             }
+            result.biasWeight = this.biasWeight * toMultiply.biasWeight;
             return result;
         } else {
             throw new MatrixDimensionMismatchException("multiplication");
@@ -96,11 +106,12 @@ public class Matrix implements Cloneable {
 
     public Matrix scalarMultiply (double scalar) {
         Matrix result = new Matrix(height, width);
-            for (int row = 0; row < height; row++) {
-                for (int col = 0; col < width; col++) {
-                    result.values[row][col] = values[row][col] * scalar;
-                }
+        for (int row = 0; row < height; row++) {
+            for (int col = 0; col < width; col++) {
+                result.values[row][col] = values[row][col] * scalar;
             }
+        }
+        result.biasWeight = this.biasWeight * scalar;
         return result;
     }
 
@@ -205,5 +216,31 @@ public class Matrix implements Cloneable {
             }
         }
         return result;
+    }
+
+    // USE THIS MATRIX AS A KERNEL
+    public Matrix convolute (Matrix input) throws MatrixDimensionMismatchException {
+
+        if (height <= input.getHeight() && width <= input.getWidth()) {
+            Matrix result = new Matrix(input.getHeight() - height + 1, input.getWidth() - width + 1);
+
+            for (int row = 0; row < result.getHeight(); row++) {
+                for (int col = 0; col < result.getWidth(); col++) {
+                    double sum = 0;
+
+                    for (int kRow = 0; kRow < height; kRow++) {
+                        for (int kCol = 0; kCol < width; kCol++) {
+                            sum += input.get(row + kRow, col + kCol) * values[kRow][kCol];
+                        }
+                    }
+                    sum += -1 * biasWeight;
+                    result.set(row, col, sum);
+                }
+            }
+
+            return result;
+        } else {
+            throw new MatrixDimensionMismatchException("image convolution");
+        }
     }
 }
