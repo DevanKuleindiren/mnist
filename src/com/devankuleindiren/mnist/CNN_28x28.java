@@ -160,7 +160,7 @@ public class CNN_28x28 extends SwingWorker<Double, Void> implements NeuralNetwor
 
                     // CALCULATE ALL DELTA TERMS
 
-
+                    
                     // CALCULATE WEIGHT DELTAS
 
 

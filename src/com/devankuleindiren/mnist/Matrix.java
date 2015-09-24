@@ -7,7 +7,7 @@ public class Matrix implements Cloneable {
 
     private int height;
     private int width;
-    double[][] values;
+    protected double[][] values;
 
     public Matrix (int height, int width) {
         this.height = height;
