@@ -115,9 +115,9 @@ public class CNN_28x28 extends SwingWorker<Double, Void> implements NeuralNetwor
 
     Matrix[][] inputs;
     Matrix[] targets;
-    private double lR = 0.0001;
-    private double momentum = 0.1;
-    private int iterationNo = 10;
+    private double lR = 0.00001;
+    private double momentum = 0.01;
+    private int iterationNo = 100;
     private Double error;
 
     @Override

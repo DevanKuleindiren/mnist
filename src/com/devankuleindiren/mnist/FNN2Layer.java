@@ -11,25 +11,18 @@ import java.io.*;
 
 public class FNN2Layer extends SwingWorker <Double, Void> implements NeuralNetwork {
 
-    public FNN2Layer (int iNN, int hNN, int oNN) {
-        inputNodesNo = iNN;
-        hiddenNeuronNo = hNN;
-        outputNeuronNo = oNN;
-
-        weights1 = new Matrix(inputNodesNo, hiddenNeuronNo);
-        weights2 = new Matrix(hiddenNeuronNo + 1, outputNeuronNo);
-
+    public FNN2Layer () {
         initWeights();
     }
 
     // SPECIFY NUMBER OF NODES IN INPUT, HIDDEN AND OUTPUT LAYERS
-    private int inputNodesNo;
-    private int hiddenNeuronNo;
-    private int outputNeuronNo;
+    private int inputNodesNo = 785;
+    private int hiddenNeuronNo = 20;
+    private int outputNeuronNo = 14;
 
     // WEIGHT MATRICES
-    private Matrix weights1;
-    private Matrix weights2;
+    private Matrix weights1 = new Matrix(inputNodesNo, hiddenNeuronNo);
+    private Matrix weights2 = new Matrix(hiddenNeuronNo + 1, outputNeuronNo);
 
     // INITIALISE EACH WEIGHT TO A RANDOM VALUE, X, IN THE RANGE -N^(-0.5) < X < N^(-0.5)
     // WHERE N IS THE NUMBER OF NODES IN THE LAYER BEFORE THE WEIGHTS

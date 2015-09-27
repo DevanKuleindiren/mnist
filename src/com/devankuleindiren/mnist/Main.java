@@ -70,7 +70,6 @@ public class Main extends JFrame {
         try {
             image = dataLoader.next("mnist_test.csv");
             controlPanel.updateLabel(image.getLabel());
-            controlPanel.loadWeights();
         } catch (IOException e) {
             JOptionPane.showMessageDialog(this,
                     "Error loading data",
