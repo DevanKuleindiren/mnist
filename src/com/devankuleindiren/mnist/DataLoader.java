@@ -73,7 +73,7 @@ public class DataLoader {
                 loadImageReader = new BufferedReader(new FileReader(fileName));
                 loadImageFileName = fileName;
             } catch (FileNotFoundException e) {
-                throw new IOException(fileName + " cannot be found.");
+                throw new FileNotFoundException(fileName + " cannot be found.");
             }
         }
 

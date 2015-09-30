@@ -1,6 +1,7 @@
 package com.devankuleindiren.mnist;
 
 import java.awt.BorderLayout;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -72,8 +73,8 @@ public class Main extends JFrame {
             controlPanel.updateLabel(image.getLabel());
         } catch (IOException e) {
             JOptionPane.showMessageDialog(this,
-                    "Error loading data",
-                    "An error occurred when importing the data. " + e.getMessage(),
+                    "Whoops!",
+                    e.getMessage(),
                     JOptionPane.ERROR_MESSAGE);
         }
         if (image == null) {
