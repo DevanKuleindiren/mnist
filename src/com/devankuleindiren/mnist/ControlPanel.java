@@ -229,8 +229,8 @@ public class ControlPanel extends JPanel {
                     updateLabel(image.getLabel());
                 } catch (IOException exception) {
                     JOptionPane.showMessageDialog(null,
-                            "Whoops!",
                             exception.getMessage(),
+                            "Whoops!",
                             JOptionPane.ERROR_MESSAGE);
                 }
             }
@@ -278,13 +278,13 @@ public class ControlPanel extends JPanel {
 
                 } catch (IOException exception) {
                     JOptionPane.showMessageDialog(null,
-                            "Whoops!",
                             exception.getMessage(),
+                            "Whoops!",
                             JOptionPane.ERROR_MESSAGE);
                 } catch (MatrixDimensionMismatchException exception) {
                     JOptionPane.showMessageDialog(null,
-                            "Whoops!",
                             exception.getMessage(),
+                            "Whoops!",
                             JOptionPane.ERROR_MESSAGE);
                 }
             }
@@ -304,13 +304,13 @@ public class ControlPanel extends JPanel {
                     neuralNetwork.saveWeights(weightsSource.getText());
                 } catch (FileNotFoundException exception) {
                     JOptionPane.showMessageDialog(null,
-                            "Whoops!",
                             weightsSource.getText() + " could not be found.",
+                            "Whoops!",
                             JOptionPane.ERROR_MESSAGE);
                 } catch (IOException exception) {
                     JOptionPane.showMessageDialog(null,
-                            "Whoops!",
                             weightsSource.getText() + " could not be saved to.",
+                            "Whoops!",
                             JOptionPane.ERROR_MESSAGE);
                 }
             }
@@ -369,19 +369,19 @@ public class ControlPanel extends JPanel {
                         JOptionPane.showMessageDialog(null, "Saved artificial data to " + artificialDataSource.getText());
                     } else {
                         JOptionPane.showMessageDialog(null,
-                                "Whoops!",
                                 target + " is an invalid target value.",
+                                "Whoops!",
                                 JOptionPane.ERROR_MESSAGE);
                     }
                 } catch (FileNotFoundException exception) {
                     JOptionPane.showMessageDialog(null,
-                            "Whoops!",
                             artificialDataSource.getText() + " could not be found.",
+                            "Whoops!",
                             JOptionPane.ERROR_MESSAGE);
                 } catch (IOException exception) {
                     JOptionPane.showMessageDialog(null,
-                            "Whoops!",
                             artificialDataSource.getText() + " could not be saved to.",
+                            "Whoops!",
                             JOptionPane.ERROR_MESSAGE);
                 }
 
@@ -420,18 +420,18 @@ public class ControlPanel extends JPanel {
             neuralNetwork.loadWeights(weightsSource.getText());
         } catch (FileNotFoundException exception) {
             JOptionPane.showMessageDialog(null,
-                    "Whoops!",
                     weightsSource.getText() + " could not be found.",
+                    "Whoops!",
                     JOptionPane.ERROR_MESSAGE);
         } catch (IOException exception) {
             JOptionPane.showMessageDialog(null,
-                    "Whoops!",
                     weightsSource.getText() + " could not be loaded.",
+                    "Whoops!",
                     JOptionPane.ERROR_MESSAGE);
         } catch (InvalidWeightFormatException exception) {
             JOptionPane.showMessageDialog(null,
-                    "Whoops!",
                     exception.getMessage(),
+                    "Whoops!",
                     JOptionPane.ERROR_MESSAGE);
         }
     }
@@ -466,8 +466,8 @@ public class ControlPanel extends JPanel {
             return target;
         } catch (MatrixDimensionMismatchException e) {
             JOptionPane.showMessageDialog(null,
-                    "Whoops!",
                     e.getMessage(),
+                    "Whoops!",
                     JOptionPane.ERROR_MESSAGE);
         }
         return "";

@@ -73,8 +73,8 @@ public class Main extends JFrame {
             controlPanel.updateLabel(image.getLabel());
         } catch (IOException e) {
             JOptionPane.showMessageDialog(this,
-                    "Whoops!",
                     e.getMessage(),
+                    "Whoops!",
                     JOptionPane.ERROR_MESSAGE);
         }
         if (image == null) {
