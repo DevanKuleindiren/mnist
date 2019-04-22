@@ -8,7 +8,7 @@ This is a Java application for playing with the MNIST dataset. You can:
 - Generate artificial training data.
 
 ## Screenshot
-![Screenshot 1](http://www.devankuleindiren.com/Images/MNIST.png "Screenshot 1")
+![Screenshot 1](http://www.devankuleindiren.com/Images/mnist.png "Screenshot 1")
 
 ## Usage
 1. Download the [jar file](https://github.com/DevanKuleindiren/MNIST/blob/master/MNIST.jar?raw=true).
